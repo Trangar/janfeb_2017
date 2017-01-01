@@ -2,10 +2,10 @@ language: rust
 os:
   - linux
   - osx
+before_script:
+  - "gem install travis-artifacts"
 script:
   - cargo test
   - cargo build --release
-addons:
-  artifacts:
-    debug: true
-    s3_region: "us-west-2"
+after_success:
+  - "travis-artifacts upload --path target/release/janfeb"
