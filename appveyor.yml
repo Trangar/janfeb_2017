@@ -9,10 +9,4 @@ build: false
 
 test_script:
   - cargo test --verbose
-
-before_deploy:
   - cargo build --release
-  - mkdir staging
-  - copy target\release\janfeb.exe staging
-  - cd staging
-  - dir

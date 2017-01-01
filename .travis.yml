@@ -8,5 +8,4 @@ script:
 addons:
   artifacts:
     debug: true
-    paths:
-        - $TRAVIS_BUILD_DIR/target/release/janfeb
+    s3_region: "us-west-2"
