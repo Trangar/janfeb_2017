@@ -2,10 +2,6 @@ language: rust
 os:
   - linux
   - osx
-before_script:
-  - "gem install travis-artifacts"
 script:
   - cargo test
   - cargo build --release
-after_success:
-  - "travis-artifacts upload --path target/release/janfeb"
