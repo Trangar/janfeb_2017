@@ -1,0 +1,18 @@
+install:
+  - curl -sSf -o rustup-init.exe https://win.rustup.rs
+  - rustup-init.exe --default-host x86_64-pc-windows-gnu --default-toolchain stable -y
+  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  - rustc -Vv
+  - cargo -V
+
+build: false
+
+test_script:
+  - cargo test --verbose
+
+before_deploy:
+  - cargo build --release
+  - mkdir staging
+  - copy target\release\janfeb.exe staging
+  - cd staging
+  - dir
