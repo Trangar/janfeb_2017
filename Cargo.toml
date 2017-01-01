@@ -1,0 +1,8 @@
+[package]
+name = "janfeb"
+version = "0.1.0"
+authors = ["Victor Koenders <victor.koenders@gmail.com>"]
+
+[dependencies]
+glium = "*"
+image = "*"
