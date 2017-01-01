@@ -1,1 +1,12 @@
 language: rust
+os:
+  - linux
+  - osx
+script:
+  - cargo test
+  - cargo build --release
+addons:
+  artifacts:
+    debug: true
+    paths:
+        - /home/travis/build/Trangar/janfeb_2017/target/debug/janfeb
