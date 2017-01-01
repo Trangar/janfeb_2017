@@ -5,10 +5,10 @@ install:
   - rustc -Vv
   - cargo -V
 
-build: 
-  - cargo build --release
+build: none
   
 after_build:
+  - cargo build --release
   - ps: Push-AppveyorArtifact target/release/janfeb.exe
 
 test_script:
