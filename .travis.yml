@@ -9,4 +9,4 @@ addons:
   artifacts:
     debug: true
     paths:
-        - /home/travis/build/Trangar/janfeb_2017/target/debug/janfeb
+        - $TRAVIS_BUILD_DIR/target/release/janfeb
