@@ -6,3 +6,5 @@ authors = ["Victor Koenders <victor.koenders@gmail.com>"]
 [dependencies]
 glium = "*"
 image = "*"
+time = "*"
+rand = "*"

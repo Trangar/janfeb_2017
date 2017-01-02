@@ -8,9 +8,9 @@ use self::error::Result;
 
 use glium::texture::{RawImage2d, Texture2d, UncompressedFloatFormat, MipmapsOption};
 use glium::{Blend, DisplayBuild, DrawParameters, IndexBuffer, Frame, VertexBuffer, Program, Surface};
-use glium::backend::glutin_backend::{GlutinFacade, PollEventsIter};
+use glium::backend::glutin_backend::GlutinFacade;
 use glium::glutin::WindowBuilder;
-use glium::index::{self,PrimitiveType};
+use glium::index::PrimitiveType;
 use std::io::Cursor;
 use image;
 
@@ -18,7 +18,8 @@ use image;
 pub struct Engine<'a> {
     pub display: GlutinFacade,
     pub program: Program,
-    pub drawParameters: DrawParameters<'a>,
+    pub draw_parameters: DrawParameters<'a>,
+    pub index_buffer: IndexBuffer<u8>,
     pub width: u32,
     pub height: u32,
 }
@@ -32,16 +33,18 @@ impl<'a> Engine<'a> {
             .with_vsync()
             .build_glium()?;
         let program = Program::from_source(&display, include_str!("../../assets/shader.vert"), include_str!("../../assets/shader.frag"), None)?;
+        let index_buffer = IndexBuffer::<u8>::new(&display, PrimitiveType::TriangleStrip, &[0, 1, 2, 3])?;
 
         Ok(Engine {
             display: display,
             program: program,
             width: width,
             height: height,
-            drawParameters: DrawParameters {
+            draw_parameters: DrawParameters {
                 blend: Blend::alpha_blending(),
                 .. DrawParameters::default()
-            }
+            },
+            index_buffer: index_buffer
         })
     }
 
@@ -49,10 +52,6 @@ impl<'a> Engine<'a> {
         let mut frame = self.display.draw();
         frame.clear_color(0.0, 0.0, 1.0, 1.0);
         frame
-    }
-
-    pub fn events(&self) -> PollEventsIter {
-        self.display.poll_events()
     }
 
     pub fn load_texture(&self, texture: &[u8]) -> Result<Texture> {
@@ -66,8 +65,6 @@ impl<'a> Engine<'a> {
     }
 
     pub fn draw_texture(&mut self, frame: &mut Frame, rect: Rect, texture: &Texture) -> Result<()> {
-        let indices = IndexBuffer::<u8>::new(&self.display, PrimitiveType::TriangleStrip, &[0, 1, 2, 3])?;
-
         let left = ((rect.x as f32) / (self.width as f32) * 2f32) - 1f32;
         let top = 1f32 - ((rect.y as f32) / (self.height as f32) * 2f32);
         let right = (((rect.x + rect.width) as f32) / (self.width as f32) * 2f32) - 1f32;
@@ -109,10 +106,10 @@ impl<'a> Engine<'a> {
         
         frame.draw(
             &vertex_buffer,
-            &indices,
+            &self.index_buffer,
             &self.program,
             &uniforms,
-            &self.drawParameters
+            &self.draw_parameters
         )?;
         Ok(())
     }
