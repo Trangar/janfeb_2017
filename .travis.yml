@@ -4,4 +4,4 @@ os:
   - osx
 script:
   - cargo test
-  - cargo build --release
+  - cargo rustc --release --verbose -- -Ctarget-feature=+crt-static -Zunstable-options
