@@ -29,7 +29,7 @@ pub enum ErrorEnum {
     ImageError(ImageError),
 }
 
-impl Error {
+//impl Error {
     //pub fn no_window() -> Error {
     //    Error {
     //        description: "No window found".to_owned(),
@@ -48,7 +48,7 @@ impl Error {
     //        error_type: ErrorEnum::ComponentNotFound(id),
     //    }
     //}
-}
+//}
 
 impl From<GliumCreationError<CreationError>> for Error {
     fn from(error: GliumCreationError<CreationError>) -> Self {

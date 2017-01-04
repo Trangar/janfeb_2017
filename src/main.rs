@@ -6,26 +6,30 @@ extern crate rand;
 mod engine;
 
 use glium::glutin::{ElementState, Event, VirtualKeyCode};
-use engine::{Engine, Rect};
+use engine::{DrawHelper, Engine};
 use rand::Rng;
 
 const HORIZONTAL_SPEED: f32 = 3f32;
 const VERTICAL_SPEED: f32 = 4f32;
-const ENEMY_BULLET_SPEED: f32 = 2f32;
+const ENEMY_BULLET_SPEED: f32 = 0.5f32;
 
 const PLAYER_WIDTH: f32 = 128.0;
 const PLAYER_HEIGHT: f32 = 64.0;
 const BULLET_WIDTH: f32 = 16.0;
 const BULLET_HEIGHT: f32 = 16.0;
 
-const MAX_BULLETS: usize = 500;
+const MAX_BULLETS: usize = 50000;
 const BULLET_SPAWN_INTERVAL: u64 = 1;
+const NS_TO_MS: u64 = 1_000_000;
+
+fn get_time() -> u64 {
+    time::precise_time_ns() / NS_TO_MS
+}
 
 fn time_elapsed_since(time: &mut u64, interval_in_ms: u64) -> bool {
-    const NS_TO_MS: u64 = 1_000_000;
     let compare_time = time::precise_time_ns() / NS_TO_MS;
     if *time + interval_in_ms < compare_time {
-        *time = compare_time;
+        *time += interval_in_ms;
         true
     } else {
         false
@@ -34,9 +38,9 @@ fn time_elapsed_since(time: &mut u64, interval_in_ms: u64) -> bool {
 
 fn main() {
     let mut engine: Engine = Engine::new(1200, 400).unwrap();
+    let spaceship_wrapper = DrawHelper::new(&engine, PLAYER_WIDTH, PLAYER_HEIGHT, &include_bytes!("../assets/spaceship.png")[..]).unwrap();
+    let bullet_wrapper = DrawHelper::new(&engine, BULLET_WIDTH, BULLET_HEIGHT, &include_bytes!("../assets/bullet.png")[..]).unwrap();
 
-    let spaceship_texture = engine.load_texture(include_bytes!("../assets/spaceship.png")).unwrap();
-    let enemy_texture = engine.load_texture(include_bytes!("../assets/bullet.png")).unwrap();
     let mut running = true;
 
     let mut down_down = false;
@@ -46,21 +50,23 @@ fn main() {
 
     let mut x = 0f32;
     let mut y = 0f32;
-    let mut last_spawn_time = 0;
+    let mut last_spawn_time = get_time();
     let mut enemies: Vec<(f32, f32)> = Vec::new();
     let mut rng = rand::thread_rng();
 
+    let mut frame_count = 0;
+    let mut last_frame_time = get_time();
+
     while running {
-        engine.display.get_window().unwrap().set_title(&format!("Enemies: {}", enemies.len()));
         let mut frame = engine.begin_draw();
         
         for enemy in &mut enemies {
-            engine.draw_texture(&mut frame, Rect::new(enemy.0, enemy.1, BULLET_WIDTH, BULLET_HEIGHT), &enemy_texture).unwrap();
+            bullet_wrapper.draw_at(&mut engine, &mut frame, enemy.0, enemy.1).unwrap();
             enemy.0 -= ENEMY_BULLET_SPEED;
         }
         enemies.retain(|e| e.0 > -BULLET_WIDTH);
 
-        engine.draw_texture(&mut frame, Rect::new(x, y, PLAYER_WIDTH, PLAYER_HEIGHT), &spaceship_texture).unwrap();
+        spaceship_wrapper.draw_at(&mut engine, &mut frame, x, y).unwrap();
         frame.finish().unwrap();
 
         for event in engine.display.poll_events() {
@@ -86,17 +92,23 @@ fn main() {
         if down_down { y += VERTICAL_SPEED; }
 
         if y < 0.0 { y = 0.0; }
-        if y > engine.height as f32 - PLAYER_HEIGHT { y = engine.height as f32 - PLAYER_HEIGHT; }
+        if y > engine.height as f32 - spaceship_wrapper.height { y = engine.height as f32 - spaceship_wrapper.height; }
 
         if left_down { x -= HORIZONTAL_SPEED; }
         if right_down { x += HORIZONTAL_SPEED; }
 
         if x < 0.0 { x = 0.0; }
-        if x > engine.width as f32 - PLAYER_WIDTH { x = engine.width as f32 - PLAYER_WIDTH; }
+        if x > engine.width as f32 - spaceship_wrapper.width { x = engine.width as f32 - spaceship_wrapper.width; }
 
-        if time_elapsed_since(&mut last_spawn_time, BULLET_SPAWN_INTERVAL) && enemies.len() < MAX_BULLETS {
-            let height = engine.height as f32 * rng.next_f32();
+        while time_elapsed_since(&mut last_spawn_time, BULLET_SPAWN_INTERVAL) && enemies.len() < MAX_BULLETS {
+            let height = (engine.height as f32 + BULLET_HEIGHT) * rng.next_f32() - BULLET_HEIGHT;
             enemies.push((engine.width as f32, height));
+        }
+
+        frame_count += 1;
+        if time_elapsed_since(&mut last_frame_time, 500) {
+            engine.display.get_window().unwrap().set_title(&format!("FPS: {} - entities: {}", frame_count * 2, enemies.len() + 1));
+            frame_count = 0;
         }
     }
 }
