@@ -1,7 +1,7 @@
 pub mod error;
-mod draw_helper;
-
 use self::error::Result;
+
+mod draw_helper;
 pub use self::draw_helper::DrawHelper;
 
 use glium::{Blend, DisplayBuild, DrawParameters, IndexBuffer, Frame, Program, Surface};
