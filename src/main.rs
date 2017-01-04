@@ -18,8 +18,8 @@ const PLAYER_HEIGHT: f32 = 64.0;
 const BULLET_WIDTH: f32 = 16.0;
 const BULLET_HEIGHT: f32 = 16.0;
 
-const MAX_BULLETS: usize = 50000;
-const BULLET_SPAWN_INTERVAL: u64 = 1;
+const MAX_BULLETS: usize = 5000;
+const BULLET_SPAWN_INTERVAL: u64 = 100;
 const NS_TO_MS: u64 = 1_000_000;
 
 fn get_time() -> u64 {
@@ -61,12 +61,12 @@ fn main() {
         let mut frame = engine.begin_draw();
         
         for enemy in &mut enemies {
-            bullet_wrapper.draw_at(&mut engine, &mut frame, enemy.0, enemy.1).unwrap();
+            bullet_wrapper.draw_at(&mut engine, &mut frame, enemy.0, enemy.1, 0.0, 1.0).unwrap();
             enemy.0 -= ENEMY_BULLET_SPEED;
         }
         enemies.retain(|e| e.0 > -BULLET_WIDTH);
 
-        spaceship_wrapper.draw_at(&mut engine, &mut frame, x, y).unwrap();
+        spaceship_wrapper.draw_at(&mut engine, &mut frame, x, y, 0.0, 0.5).unwrap();
         frame.finish().unwrap();
 
         for event in engine.display.poll_events() {
@@ -90,19 +90,15 @@ fn main() {
 
         if up_down { y -= VERTICAL_SPEED; }
         if down_down { y += VERTICAL_SPEED; }
-
-        if y < 0.0 { y = 0.0; }
-        if y > engine.height as f32 - spaceship_wrapper.height { y = engine.height as f32 - spaceship_wrapper.height; }
-
         if left_down { x -= HORIZONTAL_SPEED; }
         if right_down { x += HORIZONTAL_SPEED; }
 
-        if x < 0.0 { x = 0.0; }
-        if x > engine.width as f32 - spaceship_wrapper.width { x = engine.width as f32 - spaceship_wrapper.width; }
-
+        clamp_to(&mut y, spaceship_wrapper.height / 2f32, engine.height as f32 - spaceship_wrapper.height / 2f32);
+        clamp_to(&mut x, spaceship_wrapper.width / 2f32, engine.width as f32 - spaceship_wrapper.width / 2f32);
+        
         while time_elapsed_since(&mut last_spawn_time, BULLET_SPAWN_INTERVAL) && enemies.len() < MAX_BULLETS {
             let height = (engine.height as f32 + BULLET_HEIGHT) * rng.next_f32() - BULLET_HEIGHT;
-            enemies.push((engine.width as f32, height));
+            //enemies.push((engine.width as f32, height));
         }
 
         frame_count += 1;
@@ -111,4 +107,9 @@ fn main() {
             frame_count = 0;
         }
     }
+}
+
+fn clamp_to(value: &mut f32, min: f32, max: f32) {
+    if *value < min { *value = min; }
+    if *value > max { *value = max; }
 }

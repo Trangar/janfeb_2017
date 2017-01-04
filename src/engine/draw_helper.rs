@@ -38,27 +38,21 @@ impl<'a> DrawHelper<'a> {
             id
         };
 
-        let width = ((width / engine.width as f32) * 2f32) - 1f32;
-        let height = 1f32 - ((height / engine.height as f32) * 2f32);
-
-        const TOP: f32 = 1.0;
-        const LEFT: f32 = -1.0;
-        
         let vertex_buffer = VertexBuffer::new(&engine.display, &[
             Vertex {
-                position: [LEFT, TOP],
+                position: [-width / 2f32, -height / 2f32],
                 tex_coords: [0.0, 0.0],
             },
             Vertex {
-                position: [width, TOP],
+                position: [width / 2f32, -height / 2f32],
                 tex_coords: [1.0, 0.0],
             },
             Vertex {
-                position: [LEFT, height],
+                position: [-width / 2f32, height / 2f32],
                 tex_coords: [0.0, 1.0],
             },
             Vertex {
-                position: [width, height],
+                position: [width / 2f32, height / 2f32],
                 tex_coords: [1.0, 1.0],
             }
         ])?;
@@ -81,12 +75,16 @@ impl<'a> DrawHelper<'a> {
         })
     }
 
-    pub fn draw_at(&self, engine: &mut Engine, frame: &mut Frame, x: f32, y: f32) -> Result<()> {
-        let left = x / engine.width as f32;
-        let top = y / engine.height as f32;
-
-        let uniform = UniformsStorage::new("offset_position", [left, top]);
+    pub fn draw_at(&self, engine: &mut Engine, frame: &mut Frame, x: f32, y: f32, _rotation: f32,_scale: f32) -> Result<()> {
+        //let uniform = UniformsStorage::new("matrix", [
+        //    [1.0, 0.0, 0.0],
+        //    [0.0, 1.0, 0.0],
+        //    [x, y, 1f32]
+        //]);
+        let uniform = UniformsStorage::new("offset_position", [x, y]);
         let uniform = uniform.add("tex", &self.texture);
+        let uniform = uniform.add("screen_size", [engine.width as f32, engine.height as f32]);
+        //let uniform = uniform.add("")
         
         frame.draw(
             &self.vertex_buffer,
