@@ -5,7 +5,7 @@ use glium::index::PrimitiveType;
 use std::io::Cursor;
 use image;
 
-use super::error::Result;
+use super::Result;
 use super::Engine;
 
 static mut DRAW_HELPER_ID: u64 = 1;

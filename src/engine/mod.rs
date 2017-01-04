@@ -1,5 +1,5 @@
-pub mod error;
-use self::error::Result;
+mod error;
+pub use self::error::Result;
 
 mod draw_helper;
 pub use self::draw_helper::DrawHelper;
