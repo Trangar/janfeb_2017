@@ -75,16 +75,23 @@ impl<'a> DrawHelper<'a> {
         })
     }
 
-    pub fn draw_at(&self, engine: &mut Engine, frame: &mut Frame, x: f32, y: f32, _rotation: f32,_scale: f32) -> Result<()> {
-        //let uniform = UniformsStorage::new("matrix", [
-        //    [1.0, 0.0, 0.0],
-        //    [0.0, 1.0, 0.0],
-        //    [x, y, 1f32]
-        //]);
-        let uniform = UniformsStorage::new("offset_position", [x, y]);
+    pub fn draw_at(&self, engine: &Engine, frame: &mut Frame, x: f32, y: f32, rotation: f32, scale: f32) -> Result<()> {
+        let matrix = [
+            [
+                scale * rotation.cos(),
+                scale * rotation.sin(),
+                0.0
+            ],
+            [
+                -scale * rotation.sin(),
+                scale * rotation.cos(),
+                0.0
+            ],
+            [x, y, 1.0f32]
+        ];
+        let uniform = UniformsStorage::new("matrix", matrix);
         let uniform = uniform.add("tex", &self.texture);
         let uniform = uniform.add("screen_size", [engine.width as f32, engine.height as f32]);
-        //let uniform = uniform.add("")
         
         frame.draw(
             &self.vertex_buffer,

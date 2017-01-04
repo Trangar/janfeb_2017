@@ -1,8 +1,10 @@
 mod error;
-pub use self::error::Result;
-
 mod draw_helper;
+mod entity;
+
 pub use self::draw_helper::DrawHelper;
+pub use self::error::Result;
+pub use self::entity::Entity;
 
 use glium::{Blend, DisplayBuild, DrawParameters, IndexBuffer, Frame, Program, Surface};
 use glium::backend::glutin_backend::GlutinFacade;

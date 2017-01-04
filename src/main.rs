@@ -1,3 +1,4 @@
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate glium;
 extern crate image;
 extern crate time;
@@ -6,7 +7,7 @@ extern crate rand;
 mod engine;
 
 use glium::glutin::{ElementState, Event, VirtualKeyCode};
-use engine::{DrawHelper, Engine};
+use engine::{DrawHelper, Engine, Entity};
 use rand::Rng;
 
 const HORIZONTAL_SPEED: f32 = 3f32;
@@ -41,6 +42,8 @@ fn main() {
     let spaceship_wrapper = DrawHelper::new(&engine, PLAYER_WIDTH, PLAYER_HEIGHT, &include_bytes!("../assets/spaceship.png")[..]).unwrap();
     let bullet_wrapper = DrawHelper::new(&engine, BULLET_WIDTH, BULLET_HEIGHT, &include_bytes!("../assets/bullet.png")[..]).unwrap();
 
+    let mut player = Entity::new_player(&spaceship_wrapper);
+    
     let mut running = true;
 
     let mut down_down = false;
@@ -48,8 +51,8 @@ fn main() {
     let mut right_down = false;
     let mut left_down = false;
 
-    let mut x = 0f32;
-    let mut y = 0f32;
+    //let mut x = 0f32;
+    //let mut y = 0f32;
     let mut last_spawn_time = get_time();
     let mut enemies: Vec<(f32, f32)> = Vec::new();
     let mut rng = rand::thread_rng();
@@ -66,7 +69,9 @@ fn main() {
         }
         enemies.retain(|e| e.0 > -BULLET_WIDTH);
 
-        spaceship_wrapper.draw_at(&mut engine, &mut frame, x, y, 0.0, 0.5).unwrap();
+        player.draw(&mut engine, &mut frame).unwrap();
+
+        //spaceship_wrapper.draw_at(&mut engine, &mut frame, x, y, 0.0, 1.0).unwrap();
         frame.finish().unwrap();
 
         for event in engine.display.poll_events() {
@@ -88,17 +93,17 @@ fn main() {
             }
         }
 
-        if up_down { y -= VERTICAL_SPEED; }
-        if down_down { y += VERTICAL_SPEED; }
-        if left_down { x -= HORIZONTAL_SPEED; }
-        if right_down { x += HORIZONTAL_SPEED; }
+        if up_down { player.y -= VERTICAL_SPEED; }
+        if down_down { player.y += VERTICAL_SPEED; }
+        if left_down { player.x -= HORIZONTAL_SPEED; }
+        if right_down { player.x += HORIZONTAL_SPEED; }
 
-        clamp_to(&mut y, spaceship_wrapper.height / 2f32, engine.height as f32 - spaceship_wrapper.height / 2f32);
-        clamp_to(&mut x, spaceship_wrapper.width / 2f32, engine.width as f32 - spaceship_wrapper.width / 2f32);
+        clamp_to(&mut player.y, player.hitbox.top, engine.height as f32 - player.hitbox.bottom);
+        clamp_to(&mut player.x, player.hitbox.left, engine.width as f32 - player.hitbox.right);
         
         while time_elapsed_since(&mut last_spawn_time, BULLET_SPAWN_INTERVAL) && enemies.len() < MAX_BULLETS {
             let height = (engine.height as f32 + BULLET_HEIGHT) * rng.next_f32() - BULLET_HEIGHT;
-            //enemies.push((engine.width as f32, height));
+            enemies.push((engine.width as f32, height));
         }
 
         frame_count += 1;
