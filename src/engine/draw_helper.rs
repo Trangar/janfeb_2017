@@ -2,6 +2,7 @@ use glium::{Blend, DrawParameters, IndexBuffer, Frame, VertexBuffer, Surface};
 use glium::texture::{RawImage2d, Texture2d};
 use glium::uniforms::UniformsStorage;
 use glium::index::PrimitiveType;
+use std::hash::{Hash, Hasher};
 use std::io::Cursor;
 use image;
 
@@ -20,8 +21,14 @@ pub struct DrawHelper<'a> {
     pub height: f32,
 }
 
+impl<'a> Hash for DrawHelper<'a> {
+    fn hash<H: Hasher>(&self, h: &mut H) {
+        self.id.hash(h);
+    }
+}
+
 impl<'a> DrawHelper<'a> {
-    pub fn new(
+    pub fn new (
         engine: &Engine<'a>,
         width: f32,
         height: f32,
@@ -96,7 +103,7 @@ impl<'a> DrawHelper<'a> {
         frame.draw(
             &self.vertex_buffer,
             &self.index_buffer,
-            &engine.program,
+            &engine.textured_program,
             &uniform,
             &self.draw_parameters
         )?;
