@@ -1,19 +1,16 @@
-use glium::{Blend, DrawParameters, IndexBuffer, Frame, VertexBuffer, Surface};
+use glium::{Blend, DrawParameters, IndexBuffer, VertexBuffer, Surface};
 use glium::texture::{RawImage2d, Texture2d};
 use glium::uniforms::UniformsStorage;
 use glium::index::PrimitiveType;
-use std::hash::{Hash, Hasher};
 use std::io::Cursor;
 use image;
 
-use super::Result;
-use super::Engine;
+use super::{EngineGraphics, Result};
 
 static mut DRAW_HELPER_ID: u64 = 1;
 
-pub struct DrawHelper<'a> {
+pub struct DrawHelper {
     pub id: u64,
-    pub draw_parameters: DrawParameters<'a>,
     pub vertex_buffer: VertexBuffer<Vertex>,
     pub index_buffer: IndexBuffer<u8>,
     pub texture: Texture2d,
@@ -21,24 +18,13 @@ pub struct DrawHelper<'a> {
     pub height: f32,
 }
 
-impl<'a> Hash for DrawHelper<'a> {
-    fn hash<H: Hasher>(&self, h: &mut H) {
-        self.id.hash(h);
-    }
-}
-
-impl<'a> DrawHelper<'a> {
+impl DrawHelper {
     pub fn new (
-        engine: &Engine<'a>,
+        engine: &EngineGraphics,
         width: f32,
         height: f32,
         texture: &[u8]
-    ) -> Result<DrawHelper<'a>> {
-        let draw_parameters = DrawParameters {
-            blend: Blend::alpha_blending(),
-            .. DrawParameters::default()
-        };
-
+    ) -> Result<DrawHelper> {
         let id = unsafe {
             let id = DRAW_HELPER_ID;
             DRAW_HELPER_ID += 1;
@@ -73,7 +59,6 @@ impl<'a> DrawHelper<'a> {
 
         Ok(DrawHelper {
             id: id,
-            draw_parameters: draw_parameters,
             vertex_buffer: vertex_buffer,
             index_buffer: index_buffer,
             texture: texture,
@@ -82,7 +67,7 @@ impl<'a> DrawHelper<'a> {
         })
     }
 
-    pub fn draw_at(&self, engine: &Engine, frame: &mut Frame, x: f32, y: f32, rotation: f32, scale: f32) -> Result<()> {
+    pub fn draw_at(&self, graphics: &mut EngineGraphics, x: f32, y: f32, rotation: f32, scale: f32) -> Result<()> {
         let matrix = [
             [
                 scale * rotation.cos(),
@@ -98,16 +83,23 @@ impl<'a> DrawHelper<'a> {
         ];
         let uniform = UniformsStorage::new("matrix", matrix);
         let uniform = uniform.add("tex", &self.texture);
-        let uniform = uniform.add("screen_size", [engine.width as f32, engine.height as f32]);
+        let uniform = uniform.add("screen_size", [graphics.width as f32, graphics.height as f32]);
         
-        frame.draw(
-            &self.vertex_buffer,
-            &self.index_buffer,
-            &engine.textured_program,
-            &uniform,
-            &self.draw_parameters
-        )?;
+        let draw_parameters = DrawParameters {
+            blend: Blend::alpha_blending(),
+            .. DrawParameters::default()
+        };
 
+        if let Some(ref mut frame) = graphics.frame {
+            frame.draw(
+                &self.vertex_buffer,
+                &self.index_buffer,
+                &graphics.textured_program,
+                &uniform,
+                &draw_parameters
+            )?;
+        }
+        
         Ok(())
     }
 }

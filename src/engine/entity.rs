@@ -1,37 +1,87 @@
-use glium::Frame;
-
-use super::{DrawHelper, Engine, Result};
+use rand::ThreadRng;
+use super::{Result, EngineGraphics, KeyboardState};
 
 // TODO: Implement something like this:
-// #[derive(PartialEq)]
-// pub enum CollisionResult {
-//     DestroySelf,
-//     DestroyOther,
-//     UpdateOtherPosition { x: f32, y: f32 },
-// }
+#[derive(PartialEq)]
+pub enum CollisionResult {
+}
 
-// pub enum UpdateResult {
-//     DestroySelf,
-//     SpawnEntity(Box<EntityTrait>),
-//     UpdateHitbox(Rect),
-// }
+#[derive(Debug)]
+pub enum UpdateResult {
+    SpawnEntity(Box<EntityTrait>),
+}
 
-// pub trait EntityTrait {
-//     fn draw(&self, engine: &Engine, frame: &mut Frame) -> Result<()>;
-//     fn force_position(&mut self, x: f32, y: f32);
-//     fn as_any(&self) -> &Any;
+pub trait EntityTrait : ::std::fmt::Debug {
+    fn draw(&self, _state: &EntityState, _graphics: &mut EngineGraphics) -> Result<()>{
+        Ok(())
+    }
+    fn get_initial_state(&self) -> EntityState {
+        EntityState::default()
+    }
+    fn update(&mut self, _state: &mut EntityUpdateState) -> Vec<UpdateResult> {
+        Vec::new()
+    }
+    fn collided(&self, _self_state: &EntityState, _other: Box<EntityTrait>, _other_state: &EntityState) -> Vec<CollisionResult> {
+        Vec::new()
+    }
+    
+    fn intersects_with(&self, self_state: &EntityState, _other: Box<EntityTrait>, other_state: &EntityState) -> bool {
+        // check if our left hitbox is larger than the other's right hitbox
+        if self_state.x - self_state.hitbox.left > other_state.x + other_state.hitbox.right { return false; }
+        // check if our right hitbox is smaller than the other's left hitbox
+        if self_state.x + self_state.hitbox.right < other_state.x - other_state.hitbox.left { return false; }
+        // check if our top hitbox is larger than the other's bottom hitbox
+        if self_state.y - self_state.hitbox.top > other_state.y + other_state.hitbox.bottom { return false; }
+        // check if our bottom hitbox is smaler than the other's top hitbox
+        if self_state.y + self_state.hitbox.bottom < other_state.y - other_state.hitbox.top { return false; }
 
-//     fn update(&mut self, delta_time: u64) -> Vec<UpdateResult> {
-//         Vec::new()
-//     }
-//     fn get_hitbox(&self) -> Rect {
-//         Rect { left: 0f32, top: 0f32, right: 0f32, bottom: 0f32 }
-//     }
-//     fn collided(&self, other: &EntityTrait) -> Vec<CollisionResult> {
-//         Vec::new()
-//     }
-// }
+        // if the statements above are false, we have a collision
+        true
+    }
+}
 
+pub struct EntityUpdateState<'a> {
+    pub state: &'a mut EntityState,
+    pub delta_time: f32,
+    pub keyboard_state: &'a KeyboardState,
+    pub screen_width: f32,
+    pub screen_height: f32,
+    pub rng: &'a mut ThreadRng,
+}
+
+pub struct EntityWrapper {
+    pub entity: Box<EntityTrait>,
+    pub state: EntityState,
+}
+
+pub struct EntityState {
+    pub active: bool,
+    pub hitbox: Hitbox,
+    pub x: f32,
+    pub y: f32,
+}
+
+impl Default for EntityState {
+    fn default() -> EntityState {
+        EntityState {
+            active: true,
+            hitbox: Default::default(),
+            x: 0f32,
+            y: 0f32
+        }
+    }
+}
+
+impl EntityWrapper {
+    pub fn new(entity: Box<EntityTrait>) -> EntityWrapper {
+        EntityWrapper {
+            state: entity.get_initial_state(),
+            entity: entity,
+        }
+    }
+}
+
+/*
 pub struct Entity<'a> {
     pub draw_helper: &'a DrawHelper<'a>,
     pub x: f32,
@@ -93,8 +143,10 @@ impl<'a> Entity<'a> {
         true
     }
 }
+*/
 
-pub struct Rect {
+#[derive(Default)]
+pub struct Hitbox {
     pub left: f32,
     pub right: f32,
     pub top: f32,

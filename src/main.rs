@@ -5,16 +5,105 @@ extern crate rand;
 
 mod engine;
 
-#[derive(PartialEq, Eq, Hash)]
-pub enum Graphic {
-    Spaceship,
-    Bullet
+use std::rc::Rc;
+use engine::{DrawHelper, Engine, EntityTrait, EngineGraphics, EntityState, Result, UpdateResult, EntityUpdateState};
+use rand::Rng;
+use std::fmt::{Debug, Formatter, Result as fmtResult};
+
+const BULLET_WIDTH: f32 = 16.0;
+const BULLET_HEIGHT: f32 = 16.0;
+
+struct BulletSpawner {
+    pub bullet_wrapper: Rc<DrawHelper>,
+    pub time_counter: f32
 }
 
-use glium::glutin::VirtualKeyCode;
-use engine::{DrawHelper, Engine, Entity};
-use rand::Rng;
+impl BulletSpawner {
+    pub fn new(graphics: &EngineGraphics) -> BulletSpawner {
+        let bullet_wrapper = DrawHelper::new(graphics, BULLET_WIDTH, BULLET_HEIGHT, &include_bytes!("../assets/bullet.png")[..]).unwrap();
+        BulletSpawner {
+            bullet_wrapper: Rc::new(bullet_wrapper),
+            time_counter: 0f32
+        }
+    }
+}
 
+const BULLET_SPAWN_INTERVAL: f32 = 100f32;
+impl Debug for BulletSpawner {
+    fn fmt(&self, f: &mut Formatter) -> fmtResult {
+        write!(f, "Bullet spawner [{}/{}]", self.time_counter, BULLET_SPAWN_INTERVAL)
+    }
+}
+
+impl EntityTrait for BulletSpawner {
+    fn update(&mut self, state: &mut EntityUpdateState) -> Vec<UpdateResult>{
+        self.time_counter += state.delta_time;
+        let mut result = Vec::new();
+        while self.time_counter > BULLET_SPAWN_INTERVAL {
+            self.time_counter -= BULLET_SPAWN_INTERVAL;
+            let height = (state.screen_height) * state.rng.next_f32();
+            let bullet = Bullet::new(self.bullet_wrapper.clone(), state.screen_width, height);
+            result.push(UpdateResult::SpawnEntity(Box::new(bullet)));
+        }
+        result
+    }
+}
+
+struct Bullet {
+    drawable: Rc<DrawHelper>,
+    start_x: f32,
+    start_y: f32,
+}
+
+impl Bullet {
+    pub fn new(drawable: Rc<DrawHelper>, x: f32, y: f32) -> Bullet {
+        Bullet {
+            drawable: drawable,
+            start_x: x,
+            start_y: y,
+        }
+    }
+}
+
+impl Debug for Bullet {
+    fn fmt(&self, f: &mut Formatter) -> fmtResult {
+        write!(f, "Bullet [{}/{}]", self.start_x, self.start_y)
+    }
+}
+
+impl EntityTrait for Bullet {
+    fn get_initial_state(&self) -> EntityState {
+        EntityState {
+            x: self.start_x,
+            y: self.start_y,
+            .. EntityState::default()
+        }
+    }
+
+    fn update(&mut self, state: &mut EntityUpdateState) -> Vec<UpdateResult> {
+        state.state.x -= 0.1f32 * state.delta_time;
+
+        if state.state.x + state.state.hitbox.right < 0f32 {
+            state.state.active = false;
+        }
+        Vec::new()
+    }
+
+    fn draw(&self, state: &EntityState, graphics: &mut EngineGraphics) -> Result<()> {
+        self.drawable.draw_at(graphics, state.x, state.y, 0f32, 1f32)
+    }
+}
+
+
+fn main() {
+    let mut engine: Engine = Engine::new(1200f32, 400f32).unwrap();
+    //engine.register_entity(Player::new());
+    let spawner = BulletSpawner::new(&engine.graphics);
+    engine.register_entity(spawner);
+
+    engine.run();
+
+    /*
 const HORIZONTAL_SPEED: f32 = 0.15f32;
 const VERTICAL_SPEED: f32 = 0.2f32;
 const ENEMY_BULLET_SPEED: f32 = 0.3f32;
@@ -32,29 +121,7 @@ const PLAYER_BULLET_SPEED: f32 = 0.5f32;
 const MAX_BULLETS: usize = 5000;
 const NS_TO_MS: u64 = 1_000_000;
 
-fn get_time() -> u64 {
-    time::precise_time_ns() / NS_TO_MS
-}
 
-fn time_elapsed_since(time: &mut u64, interval_in_ms: u64) -> bool {
-    let compare_time = time::precise_time_ns() / NS_TO_MS;
-    if *time + interval_in_ms < compare_time {
-        *time += interval_in_ms;
-        true
-    } else {
-        false
-    }
-}
-
-fn get_time_since(time: &mut u64) -> u64 {
-    let time_now = time::precise_time_ns() / NS_TO_MS;
-    let diff = time_now - *time;
-    *time = time_now;
-    diff
-}
-
-fn main() {
-    let mut engine: Engine = Engine::new(1200f32, 400f32).unwrap();
     let spaceship_wrapper = DrawHelper::new(&engine, PLAYER_WIDTH, PLAYER_HEIGHT, &include_bytes!("../assets/spaceship.png")[..]).unwrap();
     let bullet_wrapper = DrawHelper::new(&engine, BULLET_WIDTH, BULLET_HEIGHT, &include_bytes!("../assets/bullet.png")[..]).unwrap();
     
@@ -138,9 +205,10 @@ fn main() {
             frame_count = 0;
         }
     }
+    */
 }
 
-fn clamp_to(value: &mut f32, min: f32, max: f32) {
-    if *value < min { *value = min; }
-    if *value > max { *value = max; }
-}
+// fn clamp_to(value: &mut f32, min: f32, max: f32) {
+//     if *value < min { *value = min; }
+//     if *value > max { *value = max; }
+// }
