@@ -19,38 +19,37 @@ pub struct DrawHelper {
 }
 
 impl DrawHelper {
-    pub fn new (
-        engine: &EngineGraphics,
-        width: f32,
-        height: f32,
-        texture: &[u8]
-    ) -> Result<DrawHelper> {
+    pub fn new(engine: &EngineGraphics,
+               width: f32,
+               height: f32,
+               texture: &[u8])
+               -> Result<DrawHelper> {
         let id = unsafe {
             let id = DRAW_HELPER_ID;
             DRAW_HELPER_ID += 1;
             id
         };
 
-        let vertex_buffer = VertexBuffer::new(&engine.display, &[
-            Vertex {
-                position: [-width / 2f32, -height / 2f32],
-                tex_coords: [0.0, 0.0],
-            },
-            Vertex {
-                position: [width / 2f32, -height / 2f32],
-                tex_coords: [1.0, 0.0],
-            },
-            Vertex {
-                position: [-width / 2f32, height / 2f32],
-                tex_coords: [0.0, 1.0],
-            },
-            Vertex {
-                position: [width / 2f32, height / 2f32],
-                tex_coords: [1.0, 1.0],
-            }
-        ])?;
+        let vertex_buffer = VertexBuffer::new(&engine.display,
+                                              &[Vertex {
+                                                    position: [-width / 2f32, -height / 2f32],
+                                                    tex_coords: [0.0, 0.0],
+                                                },
+                                                Vertex {
+                                                    position: [width / 2f32, -height / 2f32],
+                                                    tex_coords: [1.0, 0.0],
+                                                },
+                                                Vertex {
+                                                    position: [-width / 2f32, height / 2f32],
+                                                    tex_coords: [0.0, 1.0],
+                                                },
+                                                Vertex {
+                                                    position: [width / 2f32, height / 2f32],
+                                                    tex_coords: [1.0, 1.0],
+                                                }])?;
 
-        let index_buffer = IndexBuffer::<u8>::new(&engine.display, PrimitiveType::TriangleStrip, &[0, 1, 2, 3])?;
+        let index_buffer =
+            IndexBuffer::<u8>::new(&engine.display, PrimitiveType::TriangleStrip, &[0, 1, 2, 3])?;
 
         let image = image::load(Cursor::new(texture), image::PNG)?.to_rgba();
         let image_dimensions = image.dimensions();
@@ -67,39 +66,32 @@ impl DrawHelper {
         })
     }
 
-    pub fn draw_at(&self, graphics: &mut EngineGraphics, x: f32, y: f32, rotation: f32, scale: f32) -> Result<()> {
-        let matrix = [
-            [
-                scale * rotation.cos(),
-                scale * rotation.sin(),
-                0.0
-            ],
-            [
-                -scale * rotation.sin(),
-                scale * rotation.cos(),
-                0.0
-            ],
-            [x, y, 1.0f32]
-        ];
+    pub fn draw_at(&self,
+                   graphics: &mut EngineGraphics,
+                   x: f32,
+                   y: f32,
+                   rotation: f32,
+                   scale: f32)
+                   -> Result<()> {
+        let matrix = [[scale * rotation.cos(), scale * rotation.sin(), 0.0],
+                      [-scale * rotation.sin(), scale * rotation.cos(), 0.0],
+                      [x, y, 1.0f32]];
         let uniform = UniformsStorage::new("matrix", matrix);
         let uniform = uniform.add("tex", &self.texture);
-        let uniform = uniform.add("screen_size", [graphics.width as f32, graphics.height as f32]);
-        
-        let draw_parameters = DrawParameters {
-            blend: Blend::alpha_blending(),
-            .. DrawParameters::default()
-        };
+        let uniform = uniform.add("screen_size",
+                                  [graphics.width as f32, graphics.height as f32]);
+
+        let draw_parameters =
+            DrawParameters { blend: Blend::alpha_blending(), ..DrawParameters::default() };
 
         if let Some(ref mut frame) = graphics.frame {
-            frame.draw(
-                &self.vertex_buffer,
-                &self.index_buffer,
-                &graphics.textured_program,
-                &uniform,
-                &draw_parameters
-            )?;
+            frame.draw(&self.vertex_buffer,
+                      &self.index_buffer,
+                      &graphics.textured_program,
+                      &uniform,
+                      &draw_parameters)?;
         }
-        
+
         Ok(())
     }
 }

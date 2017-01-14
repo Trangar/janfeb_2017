@@ -23,32 +23,32 @@ pub enum ErrorEnum {
     VertexCreationError(VertexCreationError),
     DrawError(DrawError),
     SwapBuffersError(SwapBuffersError),
-    //NoWindow,
-    //NoInnerPixelSize,
-    //ComponentNotFound(u64),
+    // NoWindow,
+    // NoInnerPixelSize,
+    // ComponentNotFound(u64),
     ImageError(ImageError),
 }
 
-//impl Error {
-    //pub fn no_window() -> Error {
-    //    Error {
-    //        description: "No window found".to_owned(),
-    //        error_type: ErrorEnum::NoWindow,
-    //    }
-    //}
-    //pub fn no_inner_pixel_size() -> Error {
-    //    Error {
-    //        description: "No inner pixel size of WinRef found".to_owned(),
-    //        error_type: ErrorEnum::NoInnerPixelSize,
-    //    }
-    //}
-    //pub fn could_not_find_component(id: u64) -> Error {
-    //    Error {
-    //        description: format!("Could not find component {}", id),
-    //        error_type: ErrorEnum::ComponentNotFound(id),
-    //    }
-    //}
-//}
+// impl Error {
+// pub fn no_window() -> Error {
+//    Error {
+//        description: "No window found".to_owned(),
+//        error_type: ErrorEnum::NoWindow,
+//    }
+//
+// pub fn no_inner_pixel_size() -> Error {
+//    Error {
+//        description: "No inner pixel size of WinRef found".to_owned(),
+//        error_type: ErrorEnum::NoInnerPixelSize,
+//    }
+//
+// pub fn could_not_find_component(id: u64) -> Error {
+//    Error {
+//        description: format!("Could not find component {}", id),
+//        error_type: ErrorEnum::ComponentNotFound(id),
+//    }
+//
+//
 
 impl From<GliumCreationError<CreationError>> for Error {
     fn from(error: GliumCreationError<CreationError>) -> Self {
