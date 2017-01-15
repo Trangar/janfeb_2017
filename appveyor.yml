@@ -6,8 +6,8 @@ install:
   - cargo -V
 
 build_script:
-  - cargo rustc --release --verbose -- -Ctarget-feature=+crt-static -Zunstable-options
+  - cargo build --release
   - ps: Push-AppveyorArtifact target/release/janfeb.exe
 
 test_script:
-  - cargo test --verbose
+  - cargo test --verbose --release -- --nocapture

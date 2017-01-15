@@ -8,7 +8,7 @@ pub use self::draw_helper::DrawHelper;
 pub use self::error::Result;
 pub use self::entity::{EntityTrait, EntityWrapper, EntityState, CollisionResult, UpdateResult,
                        EntityUpdateState};
-use self::keyboard_state::KeyboardState;
+pub use self::keyboard_state::KeyboardState;
 
 use glium::{DisplayBuild, DrawParameters, IndexBuffer, Frame, VertexBuffer, Program, Surface};
 use glium::glutin::{Event, VirtualKeyCode, ElementState, WindowBuilder};

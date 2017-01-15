@@ -3,5 +3,5 @@ os:
   - linux
   - osx
 script:
-  - cargo test
-  - cargo rustc --release --verbose -- -Ctarget-feature=+crt-static -Zunstable-options
+  - cargo test --verbose --release -- --nocapture
+  - cargo build --release --verbosex
