@@ -4,4 +4,4 @@ os:
   - osx
 script:
   - cargo test --verbose --release -- --nocapture
-  - cargo build --release --verbosex
+  - cargo build --release --verbose
