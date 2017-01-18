@@ -1,24 +1,26 @@
-use rand::ThreadRng;
-use super::{Result, EngineGraphics, KeyboardState};
+use super::{Result, Engine, EngineGraphics, KeyboardState};
+use rand::{ThreadRng, Rng};
 
 // TODO: Implement something like this:
 #[derive(PartialEq)]
 pub enum CollisionResult {
 }
 
-#[derive(Debug)]
 pub enum UpdateResult {
     SpawnEntity(Box<EntityTrait>),
 }
 
-pub trait EntityTrait: ::std::fmt::Debug {
+pub trait EntityTrait {
     fn draw(&self, _state: &EntityState, _graphics: &mut EngineGraphics) -> Result<()> {
         Ok(())
     }
-    fn get_initial_state(&self) -> EntityState {
+    fn get_initial_state(&self, _engine: &Engine) -> EntityState {
         EntityState::default()
     }
-    fn update(&mut self, _state: &mut EntityUpdateState) -> Vec<UpdateResult> {
+    fn update(&mut self,
+              _game_state: &mut GameState,
+              _entity_state: &mut EntityState)
+              -> Vec<UpdateResult> {
         Vec::new()
     }
     fn collided(&self,
@@ -56,13 +58,18 @@ pub trait EntityTrait: ::std::fmt::Debug {
     }
 }
 
-pub struct EntityUpdateState<'a> {
-    pub state: &'a mut EntityState,
+pub struct GameState<'a> {
     pub delta_time: f32,
-    pub keyboard_state: &'a KeyboardState,
+    pub keyboard: &'a KeyboardState,
     pub screen_width: f32,
     pub screen_height: f32,
     pub rng: &'a mut ThreadRng,
+}
+
+impl<'a> GameState<'a> {
+    pub fn rand_f32(&mut self) -> f32 {
+        self.rng.next_f32()
+    }
 }
 
 pub struct EntityWrapper {
@@ -89,76 +96,13 @@ impl Default for EntityState {
 }
 
 impl EntityWrapper {
-    pub fn new(entity: Box<EntityTrait>) -> EntityWrapper {
+    pub fn new(entity: Box<EntityTrait>, engine: &Engine) -> EntityWrapper {
         EntityWrapper {
-            state: entity.get_initial_state(),
+            state: entity.get_initial_state(engine),
             entity: entity,
         }
     }
 }
-
-// pub struct Entity<'a> {
-// pub draw_helper: &'a DrawHelper<'a>,
-// pub x: f32,
-// pub y: f32,
-// pub rotation: f32,
-// pub scale: f32,
-// pub hitbox: Rect,
-// }
-//
-// impl<'a> Entity<'a> {
-// pub fn new_player(draw_helper: &'a DrawHelper<'a>, y: f32) -> Entity<'a> {
-// let hitbox = Rect {
-// left: 58f32,
-// top: 29f32,
-// right: 40f32,
-// bottom: 29f32
-// };
-// Entity {
-// draw_helper: draw_helper,
-// x: hitbox.left,
-// y: y,
-// rotation: 0.0,
-// scale: 1.0,
-// hitbox: hitbox,
-// }
-// }
-// pub fn new_bullet(draw_helper: &'a DrawHelper<'a>, x: f32, y: f32) -> Entity<'a> {
-// let hitbox = Rect {
-// left: 6f32,
-// top: 6f32,
-// right: 6f32,
-// bottom: 6f32
-// };
-// Entity {
-// draw_helper: draw_helper,
-// x: x,
-// y: y,
-// rotation: 0.0,
-// scale: 1.0,
-// hitbox: hitbox,
-// }
-// }
-//
-// pub fn draw(&self, engine: &Engine, frame: &mut Frame) -> Result<()> {
-// self.draw_helper.draw_at(engine, frame, self.x, self.y, self.rotation, self.scale)
-// }
-//
-// pub fn intersects_with(&self, other: &Entity) -> bool {
-// check if our left hitbox is larger than the other's right hitbox
-// if self.x - self.hitbox.left > other.x + other.hitbox.right { return false; }
-// check if our right hitbox is smaller than the other's left hitbox
-// if self.x + self.hitbox.right < other.x - other.hitbox.left { return false; }
-// check if our top hitbox is larger than the other's bottom hitbox
-// if self.y - self.hitbox.top > other.y + other.hitbox.bottom { return false; }
-// check if our bottom hitbox is smaler than the other's top hitbox
-// if self.y + self.hitbox.bottom < other.y - other.hitbox.top { return false; }
-//
-// if the statements above are false, we have a collision
-// true
-// }
-// }
-//
 
 #[derive(Default)]
 pub struct Hitbox {

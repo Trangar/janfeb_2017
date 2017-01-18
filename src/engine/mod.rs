@@ -4,17 +4,19 @@ mod entity;
 mod keyboard_state;
 mod time;
 
+pub use self::keyboard_state::KeyboardState;
 pub use self::draw_helper::DrawHelper;
 pub use self::error::Result;
-pub use self::entity::{EntityTrait, EntityWrapper, EntityState, CollisionResult, UpdateResult,
-                       EntityUpdateState};
-pub use self::keyboard_state::KeyboardState;
+pub use self::entity::*;
 
 use glium::{DisplayBuild, DrawParameters, IndexBuffer, Frame, VertexBuffer, Program, Surface};
-use glium::glutin::{Event, VirtualKeyCode, ElementState, WindowBuilder};
+use glium::glutin::{Event, ElementState, WindowBuilder};
 use glium::backend::glutin_backend::GlutinFacade;
 use glium::uniforms::UniformsStorage;
 use glium::index::PrimitiveType;
+
+pub use glium::glutin::VirtualKeyCode;
+pub use std::rc::Rc;
 
 pub struct Engine {
     pub graphics: EngineGraphics,
@@ -72,7 +74,8 @@ impl Engine {
     }
 
     pub fn register_entity<T: EntityTrait + 'static>(&mut self, entity: T) {
-        self.entities.push(EntityWrapper::new(Box::new(entity)));
+        let wrapper = EntityWrapper::new(Box::new(entity), self);
+        self.entities.push(wrapper);
     }
 
     pub fn draw(&mut self) -> Result<()> {
@@ -98,15 +101,14 @@ impl Engine {
         let mut spawned_entities: Vec<Box<EntityTrait>> = Vec::new();
 
         for entity in &mut self.entities {
-            let mut state = EntityUpdateState {
-                state: &mut entity.state,
+            let mut state = GameState {
                 delta_time: delta_time,
-                keyboard_state: &self.keyboard,
+                keyboard: &self.keyboard,
                 screen_width: self.graphics.width,
                 screen_height: self.graphics.height,
                 rng: &mut self.rng,
             };
-            let update_result = entity.entity.update(&mut state);
+            let update_result = entity.entity.update(&mut state, &mut entity.state);
             for result in update_result.into_iter() {
                 match result {
                     UpdateResult::SpawnEntity(e) => spawned_entities.push(e),
@@ -116,7 +118,8 @@ impl Engine {
         self.entities.retain(|e| e.state.active);
 
         for entity in spawned_entities.into_iter() {
-            self.entities.push(EntityWrapper::new(entity));
+            let wrapper = EntityWrapper::new(entity, self);
+            self.entities.push(wrapper);
         }
     }
 
