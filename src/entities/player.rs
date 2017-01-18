@@ -1,4 +1,5 @@
 use engine::*;
+use super::Bullet;
 
 // const PLAYER_FIRE_POINTS: [[f32;2];2] = [[-10.0, -25.0],[-10.0,25.0]];
 const PLAYER_WIDTH: f32 = 128.0;
@@ -63,10 +64,29 @@ impl EntityTrait for Player {
         state.x += x * HORIZONTAL_SPEED * game_state.delta_time;
         state.y += y * VERTICAL_SPEED * game_state.delta_time;
 
+        clamp_to(&mut state.x, state.hitbox.left, game_state.screen_width - state.hitbox.right);
+        clamp_to(&mut state.y, state.hitbox.top, game_state.screen_height - state.hitbox.bottom);
+
         Vec::new()
     }
 
     fn draw(&self, state: &EntityState, graphics: &mut EngineGraphics) -> Result<()> {
         self.drawable.draw_at(graphics, state.x, state.y, 0f32, 1f32)
     }
+
+    fn collided(&self,
+                _self_state: &EntityState,
+                other: &Box<EntityTrait>,
+                _other_state: &EntityState)
+                -> Vec<CollisionResult> {
+        if let Some(ref bullet) = other.as_type::<Bullet>() {
+            println!("Collided with bullet");
+        }
+        Vec::new()
+    }
+}
+
+fn clamp_to(value: &mut f32, min: f32, max: f32) {
+    if *value < min { *value = min; }
+    if *value > max { *value = max; }
 }

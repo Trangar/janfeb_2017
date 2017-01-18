@@ -1,5 +1,6 @@
 use super::{Result, Engine, EngineGraphics, KeyboardState};
 use rand::{ThreadRng, Rng};
+use std::any::Any;
 
 // TODO: Implement something like this:
 #[derive(PartialEq)]
@@ -8,6 +9,16 @@ pub enum CollisionResult {
 
 pub enum UpdateResult {
     SpawnEntity(Box<EntityTrait>),
+}
+
+pub trait EntityCastTrait {
+    fn as_type<T: Any>(&self) -> Option<&Box<&T>>;
+}
+impl EntityCastTrait for Box<EntityTrait> {
+    fn as_type<T: Any>(&self) -> Option<&Box<&T>> {
+        let any = self as &Any;
+        any.downcast_ref::<Box<&T>>()
+    }
 }
 
 pub trait EntityTrait {
@@ -25,7 +36,7 @@ pub trait EntityTrait {
     }
     fn collided(&self,
                 _self_state: &EntityState,
-                _other: Box<EntityTrait>,
+                _other: &Box<EntityTrait>,
                 _other_state: &EntityState)
                 -> Vec<CollisionResult> {
         Vec::new()
@@ -33,7 +44,7 @@ pub trait EntityTrait {
 
     fn intersects_with(&self,
                        self_state: &EntityState,
-                       _other: Box<EntityTrait>,
+                       _other: &Box<EntityTrait>,
                        other_state: &EntityState)
                        -> bool {
         // check if our left hitbox is larger than the other's right hitbox

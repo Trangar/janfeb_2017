@@ -115,6 +115,20 @@ impl Engine {
                 }
             }
         }
+
+        for i in 0..self.entities.len() {
+            for j in i + 1..self.entities.len() {
+                let ref first = self.entities[i];
+                let ref second = self.entities[j];
+                if first.entity.intersects_with(&first.state, &second.entity, &second.state) {
+                    let _result = first.entity.collided(&first.state, &second.entity, &second.state);
+                }
+                if second.entity.intersects_with(&second.state, &first.entity, &first.state) {
+                    let _result = second.entity.collided(&second.state, &first.entity, &first.state);
+                }
+            }
+        }
+
         self.entities.retain(|e| e.state.active);
 
         for entity in spawned_entities.into_iter() {
