@@ -28,49 +28,17 @@ pub struct Engine {
     pub rng: ::rand::ThreadRng,
 }
 
-pub struct EngineGraphics {
-    pub display: GlutinFacade,
-    pub textured_program: Program,
-    pub color_program: Program,
-    pub frame: Option<Frame>,
-    pub width: f32,
-    pub height: f32,
-}
-
 impl Engine {
     pub fn new(width: f32, height: f32) -> Result<Engine> {
-        let display = WindowBuilder::new().with_dimensions(width as u32, height as u32)
-            .with_min_dimensions(width as u32, height as u32)
-            .with_max_dimensions(width as u32, height as u32)
-            .with_vsync()
-            .build_glium()?;
-        let textured_program =
-            Program::from_source(&display,
-                                 include_str!("../../assets/textured_shader.vert"),
-                                 include_str!("../../assets/textured_shader.frag"),
-                                 None)?;
-        let color_program = Program::from_source(&display,
-                                                 include_str!("../../assets/color_shader.vert"),
-                                                 include_str!("../../assets/color_shader.frag"),
-                                                 None)?;
-
-        println!("{:?}", display.get_opengl_version());
-
-        Ok(Engine {
-            graphics: EngineGraphics {
-                display: display,
-                textured_program: textured_program,
-                color_program: color_program,
-                frame: None,
-                width: width,
-                height: height,
-            },
+        let engine = Engine {
+            graphics: EngineGraphics::new(width, height)?,
             keyboard: KeyboardState::default(),
             running: true,
             last_update_time: self::time::get(),
             entities: Vec::new(),
             rng: ::rand::thread_rng(),
-        })
+        };
+        Ok(engine)
     }
 
     pub fn register_entity<T: EntityTrait + 'static>(&mut self, entity: T) {
@@ -96,9 +64,48 @@ impl Engine {
         Ok(())
     }
 
+    fn handle_event(&mut self, events: Vec<EntityEvent>) {
+        for result in events.into_iter() {
+            match result {
+                EntityEvent::SpawnEntity(entity) => {
+                    let wrapper = EntityWrapper::new(entity, self);
+                    self.entities.push(wrapper);
+                },
+                EntityEvent::ClearAllEntities => {
+                    self.entities.clear();
+                }
+            }
+        }
+    }
+
+    fn check_collisions(&mut self) {
+        let events = {
+            let mut events = Vec::new();
+            let ref mut slice = self.entities[..];
+            for i in 1..slice.len() {
+                let (ref mut first, ref mut remaining) = slice.split_at_mut(i);
+                let ref mut first = first.last_mut().unwrap();
+                for ref mut second in remaining.iter_mut() {
+                    if first.entity.intersects_with(&first.state, &second.entity, &second.state) {
+                        let results = first.entity.collided(&mut first.state, &second.entity, &mut second.state, &self.graphics);
+                        events.extend(results.into_iter());
+                    }
+                    if second.entity.intersects_with(&second.state, &first.entity, &first.state) {
+                        let results = second.entity.collided(&mut second.state, &first.entity, &mut first.state, &self.graphics);
+                        events.extend(results.into_iter());
+                    }
+                }
+            }
+            events
+        };
+
+        self.handle_event(events);
+    }
+
     pub fn update_entities(&mut self) {
         let delta_time = self::time::since(&mut self.last_update_time) as f32;
-        let mut spawned_entities: Vec<Box<EntityTrait>> = Vec::new();
+
+        let mut events = Vec::new();
 
         for entity in &mut self.entities {
             let mut state = GameState {
@@ -109,32 +116,14 @@ impl Engine {
                 rng: &mut self.rng,
             };
             let update_result = entity.entity.update(&mut state, &mut entity.state);
-            for result in update_result.into_iter() {
-                match result {
-                    UpdateResult::SpawnEntity(e) => spawned_entities.push(e),
-                }
-            }
+            events.extend(update_result.into_iter());
         }
 
-        for i in 0..self.entities.len() {
-            for j in i + 1..self.entities.len() {
-                let ref first = self.entities[i];
-                let ref second = self.entities[j];
-                if first.entity.intersects_with(&first.state, &second.entity, &second.state) {
-                    let _result = first.entity.collided(&first.state, &second.entity, &second.state);
-                }
-                if second.entity.intersects_with(&second.state, &first.entity, &first.state) {
-                    let _result = second.entity.collided(&second.state, &first.entity, &first.state);
-                }
-            }
-        }
+        self.handle_event(events);
+
+        self.check_collisions();
 
         self.entities.retain(|e| e.state.active);
-
-        for entity in spawned_entities.into_iter() {
-            let wrapper = EntityWrapper::new(entity, self);
-            self.entities.push(wrapper);
-        }
     }
 
     pub fn run(&mut self) {
@@ -182,39 +171,75 @@ impl Engine {
 
 #[derive(Copy, Clone)]
 pub struct Vertex {
-    pub position: [f32; 2],
+    pub dimension_affinity: [f32; 2],
 }
 
-implement_vertex!(Vertex, position);
+implement_vertex!(Vertex, dimension_affinity);
 
-#[allow(dead_code)]
-pub fn draw_rectangle(engine: &Engine,
-                      frame: &mut Frame,
-                      x: f32,
-                      y: f32,
-                      width: f32,
-                      height: f32,
-                      color: (f32, f32, f32, f32))
-                      -> Result<()> {
-    let vertex_buffer = VertexBuffer::new(&engine.graphics.display,
-                                          &[Vertex { position: [x, y] },
-                                            Vertex { position: [x + width, y] },
-                                            Vertex { position: [x, y + height] },
-                                            Vertex { position: [x + width, y + height] }])?;
+pub struct EngineGraphics {
+    pub display: GlutinFacade,
+    pub textured_program: Program,
+    pub color_program: Program,
+    pub frame: Option<Frame>,
+    pub width: f32,
+    pub height: f32,
 
-    let index_buffer = IndexBuffer::<u8>::new(&engine.graphics.display,
-                                              PrimitiveType::TriangleStrip,
-                                              &[0, 1, 2, 3])?;
+    rectangle_vertex_buffer: VertexBuffer<Vertex>,
+    rectangle_index_buffer: IndexBuffer<u8>,
+}
 
-    let matrix = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0f32]];
-    let uniform = UniformsStorage::new("matrix", matrix);
-    let uniform = uniform.add("color", color);
-    let uniform = uniform.add("screen_size",
-                              [engine.graphics.width as f32, engine.graphics.height as f32]);
-    frame.draw(&vertex_buffer,
-              &index_buffer,
-              &engine.graphics.color_program,
-              &uniform,
-              &DrawParameters::default())?;
-    Ok(())
+impl EngineGraphics {
+    pub fn new(width: f32, height: f32) -> Result<EngineGraphics> {
+        let display = WindowBuilder::new().with_dimensions(width as u32, height as u32)
+            .with_min_dimensions(width as u32, height as u32)
+            .with_max_dimensions(width as u32, height as u32)
+            .with_vsync()
+            .build_glium()?;
+        let textured_program =
+            Program::from_source(&display,
+                                 include_str!("../../assets/textured_shader.vert"),
+                                 include_str!("../../assets/textured_shader.frag"),
+                                 None)?;
+        let color_program = Program::from_source(&display,
+                                                 include_str!("../../assets/color_shader.vert"),
+                                                 include_str!("../../assets/color_shader.frag"),
+                                                 None)?;
+
+        println!("{:?}", display.get_opengl_version());
+
+        let rectangle_vertex_buffer = VertexBuffer::new(&display,
+                                            &[Vertex { dimension_affinity: [0f32, 0f32] },
+                                              Vertex { dimension_affinity: [1f32, 0f32] },
+                                              Vertex { dimension_affinity: [0f32, 1f32] },
+                                              Vertex { dimension_affinity: [1f32, 1f32] }])?;
+
+        let rectangle_index_buffer = IndexBuffer::<u8>::new(&display,
+                                                PrimitiveType::TriangleStrip,
+                                                &[0, 1, 2, 3])?;
+
+        Ok(EngineGraphics {
+            display: display,
+            textured_program: textured_program,
+            color_program: color_program,
+            frame: None,
+            width: width,
+            height: height,
+            rectangle_vertex_buffer: rectangle_vertex_buffer,
+            rectangle_index_buffer: rectangle_index_buffer
+        })
+    }
+    pub fn draw_rectangle(&mut self, x: f32, y: f32, width: f32, height: f32, color: (f32, f32, f32, f32)) -> Result<()> {
+        if let Some(ref mut frame) = self.frame {
+            let uniform = UniformsStorage::new("offset", [x, y]);
+            let uniform = uniform.add("dimensions", [width, height]);
+            let uniform = uniform.add("color", color);
+            let uniform = uniform.add("screen_size", [self.width as f32, self.height as f32]);
+            frame.draw(&self.rectangle_vertex_buffer,
+                    &self.rectangle_index_buffer,
+                    &self.color_program,
+                    &uniform,
+                    &DrawParameters::default())?;
+        }
+        Ok(())
+    }
 }

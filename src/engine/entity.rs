@@ -1,16 +1,24 @@
 use super::{Result, Engine, EngineGraphics, KeyboardState};
 use rand::{ThreadRng, Rng};
-use std::any::Any;
 
-// TODO: Implement something like this:
-#[derive(PartialEq)]
 pub enum CollisionResult {
 }
 
-pub enum UpdateResult {
+/*
+// TODO: Add collision layers where entities are on a layer and can determine what layers they collide with
+pub enum CollisionLayer {
+    None,
+    Player,
+    Enemy,
+}
+*/
+pub enum EntityEvent {
+    ClearAllEntities,
     SpawnEntity(Box<EntityTrait>),
 }
 
+/*
+// TODO: This always returns Option::None
 pub trait EntityCastTrait {
     fn as_type<T: Any>(&self) -> Option<&Box<&T>>;
 }
@@ -20,8 +28,13 @@ impl EntityCastTrait for Box<EntityTrait> {
         any.downcast_ref::<Box<&T>>()
     }
 }
+*/
+
 
 pub trait EntityTrait {
+    fn identifying_string(&self) -> String;
+    //fn collision_layers(&self) -> Vec<CollisionLayer> { Vec::new() }
+    //fn collides_with_layers(&self) -> Vec<CollisionLayer> { Vec::new() }
     fn draw(&self, _state: &EntityState, _graphics: &mut EngineGraphics) -> Result<()> {
         Ok(())
     }
@@ -31,14 +44,15 @@ pub trait EntityTrait {
     fn update(&mut self,
               _game_state: &mut GameState,
               _entity_state: &mut EntityState)
-              -> Vec<UpdateResult> {
+              -> Vec<EntityEvent> {
         Vec::new()
     }
-    fn collided(&self,
-                _self_state: &EntityState,
+    fn collided(&mut self,
+                _self_state: &mut EntityState,
                 _other: &Box<EntityTrait>,
-                _other_state: &EntityState)
-                -> Vec<CollisionResult> {
+                _other_state: &mut EntityState,
+                _graphics: &EngineGraphics)
+                -> Vec<EntityEvent> {
         Vec::new()
     }
 
@@ -86,6 +100,7 @@ impl<'a> GameState<'a> {
 pub struct EntityWrapper {
     pub entity: Box<EntityTrait>,
     pub state: EntityState,
+    pub name: String,
 }
 
 pub struct EntityState {
@@ -110,6 +125,7 @@ impl EntityWrapper {
     pub fn new(entity: Box<EntityTrait>, engine: &Engine) -> EntityWrapper {
         EntityWrapper {
             state: entity.get_initial_state(engine),
+            name: entity.identifying_string(),
             entity: entity,
         }
     }

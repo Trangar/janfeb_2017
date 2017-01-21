@@ -1,5 +1,5 @@
 use engine::*;
-use super::Bullet;
+//use super::YouLost;
 
 // const PLAYER_FIRE_POINTS: [[f32;2];2] = [[-10.0, -25.0],[-10.0,25.0]];
 const PLAYER_WIDTH: f32 = 128.0;
@@ -11,6 +11,8 @@ pub struct Player {
     pub drawable: DrawHelper,
     pub last_bullet_time: f32,
     pub last_bullet_position_index: u8,
+    pub health: u64,
+    pub max_health: u64,
 }
 
 impl Player {
@@ -24,11 +26,14 @@ impl Player {
             drawable: drawable,
             last_bullet_time: 0f32,
             last_bullet_position_index: 0,
+            health: 10,
+            max_health: 10,
         })
     }
 }
 
 impl EntityTrait for Player {
+    fn identifying_string(&self) -> String { "Player".to_owned() }
     fn get_initial_state(&self, engine: &Engine) -> EntityState {
         let hitbox = Hitbox {
             left: 58f32,
@@ -44,7 +49,7 @@ impl EntityTrait for Player {
         }
     }
 
-    fn update(&mut self, game_state: &mut GameState, state: &mut EntityState) -> Vec<UpdateResult> {
+    fn update(&mut self, game_state: &mut GameState, state: &mut EntityState) -> Vec<EntityEvent> {
         let mut x = 0f32;
         let mut y = 0f32;
 
@@ -71,18 +76,48 @@ impl EntityTrait for Player {
     }
 
     fn draw(&self, state: &EntityState, graphics: &mut EngineGraphics) -> Result<()> {
-        self.drawable.draw_at(graphics, state.x, state.y, 0f32, 1f32)
+        self.drawable.draw_at(graphics, state.x, state.y, 0f32, 1f32)?;
+
+        let health_factor = (self.health as f32) / (self.max_health as f32);
+        let HEALTHBAR_OFFSET: (f32, f32) = (-state.hitbox.left, state.hitbox.bottom + 10f32);
+        let HEALTHBAR_SIZE: (f32, f32) = (state.hitbox.left + state.hitbox.right, 5f32);
+        const COLOR_GREEN: (f32, f32, f32, f32) = (0.0, 1.0, 0.0, 1.0);
+        const COLOR_RED: (f32, f32, f32, f32) = (1.0, 0.0, 0.0, 1.0);
+        graphics.draw_rectangle(
+            state.x + HEALTHBAR_OFFSET.0,
+            state.y + HEALTHBAR_OFFSET.1,
+            HEALTHBAR_SIZE.0 * health_factor, 
+            HEALTHBAR_SIZE.1,
+            COLOR_GREEN
+        )?;
+        graphics.draw_rectangle(
+            state.x + HEALTHBAR_OFFSET.0 + HEALTHBAR_SIZE.0 * health_factor,
+            state.y + HEALTHBAR_OFFSET.1,
+            HEALTHBAR_SIZE.0 - HEALTHBAR_SIZE.0 * health_factor,
+            HEALTHBAR_SIZE.1,
+            COLOR_RED
+        )?;
+        Ok(())
     }
 
-    fn collided(&self,
-                _self_state: &EntityState,
-                other: &Box<EntityTrait>,
-                _other_state: &EntityState)
-                -> Vec<CollisionResult> {
-        if let Some(ref bullet) = other.as_type::<Bullet>() {
-            println!("Collided with bullet");
-        }
-        Vec::new()
+    fn collided(&mut self,
+                self_state: &mut EntityState,
+                _other: &Box<EntityTrait>,
+                other_state: &mut EntityState,
+                _graphics: &EngineGraphics)
+                -> Vec<EntityEvent> {
+        self.health -= 1;
+        other_state.active = false;
+        
+        if self.health == 0 {
+            self_state.active = false;
+            //let you_lost = Box::new(YouLost::new().unwrap());
+            //vec![
+            //    EntityEvent::SpawnEntity(you_lost)
+            //]
+        } //else {
+            Vec::new()
+        //}
     }
 }
 
