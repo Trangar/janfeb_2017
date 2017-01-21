@@ -1,14 +1,14 @@
+use GraphicsEnum;
 use engine::*;
 //use super::YouLost;
 
 // const PLAYER_FIRE_POINTS: [[f32;2];2] = [[-10.0, -25.0],[-10.0,25.0]];
-const PLAYER_WIDTH: f32 = 128.0;
-const PLAYER_HEIGHT: f32 = 64.0;
+pub const WIDTH: f32 = 128.0;
+pub const HEIGHT: f32 = 64.0;
 const HORIZONTAL_SPEED: f32 = 0.15f32;
 const VERTICAL_SPEED: f32 = 0.2f32;
 
 pub struct Player {
-    pub drawable: DrawHelper,
     pub last_bullet_time: f32,
     pub last_bullet_position_index: u8,
     pub health: u64,
@@ -16,25 +16,22 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(engine: &Engine) -> Result<Player> {
-        let drawable = DrawHelper::new(&engine.graphics,
-                                       PLAYER_WIDTH,
-                                       PLAYER_HEIGHT,
-                                       &include_bytes!("../../assets/spaceship.png")[..])?;
-
-        Ok(Player {
-            drawable: drawable,
+    pub fn new() -> Player {
+        Player {
             last_bullet_time: 0f32,
             last_bullet_position_index: 0,
             health: 10,
             max_health: 10,
-        })
+        }
     }
 }
 
-impl EntityTrait for Player {
+const COLOR_GREEN: (f32, f32, f32, f32) = (0.0, 1.0, 0.0, 1.0);
+const COLOR_RED: (f32, f32, f32, f32) = (1.0, 0.0, 0.0, 1.0);
+
+impl EntityTrait<GraphicsEnum> for Player {
     fn identifying_string(&self) -> String { "Player".to_owned() }
-    fn get_initial_state(&self, engine: &Engine) -> EntityState {
+    fn get_initial_state(&self, engine: &Engine<GraphicsEnum>) -> EntityState {
         let hitbox = Hitbox {
             left: 58f32,
             top: 29f32,
@@ -49,7 +46,7 @@ impl EntityTrait for Player {
         }
     }
 
-    fn update(&mut self, game_state: &mut GameState, state: &mut EntityState) -> Vec<EntityEvent> {
+    fn update(&mut self, game_state: &mut GameState, state: &mut EntityState) -> Vec<EntityEvent<GraphicsEnum>> {
         let mut x = 0f32;
         let mut y = 0f32;
 
@@ -75,26 +72,24 @@ impl EntityTrait for Player {
         Vec::new()
     }
 
-    fn draw(&self, state: &EntityState, graphics: &mut EngineGraphics) -> Result<()> {
-        self.drawable.draw_at(graphics, state.x, state.y, 0f32, 1f32)?;
+    fn draw(&self, state: &EntityState, graphics: &mut EngineGraphics<GraphicsEnum>) -> Result<()> {
+        graphics.draw(GraphicsEnum::Spaceship, state.x, state.y, 0f32, 1f32)?;
 
         let health_factor = (self.health as f32) / (self.max_health as f32);
-        let HEALTHBAR_OFFSET: (f32, f32) = (-state.hitbox.left, state.hitbox.bottom + 10f32);
-        let HEALTHBAR_SIZE: (f32, f32) = (state.hitbox.left + state.hitbox.right, 5f32);
-        const COLOR_GREEN: (f32, f32, f32, f32) = (0.0, 1.0, 0.0, 1.0);
-        const COLOR_RED: (f32, f32, f32, f32) = (1.0, 0.0, 0.0, 1.0);
+        let healthbar_offset: (f32, f32) = (-state.hitbox.left * 0.75, -(state.hitbox.top + 10f32));
+        let healthbar_size: (f32, f32) = ((state.hitbox.left + state.hitbox.right) * 0.5, 5f32);
         graphics.draw_rectangle(
-            state.x + HEALTHBAR_OFFSET.0,
-            state.y + HEALTHBAR_OFFSET.1,
-            HEALTHBAR_SIZE.0 * health_factor, 
-            HEALTHBAR_SIZE.1,
+            state.x + healthbar_offset.0,
+            state.y + healthbar_offset.1,
+            healthbar_size.0 * health_factor, 
+            healthbar_size.1,
             COLOR_GREEN
         )?;
         graphics.draw_rectangle(
-            state.x + HEALTHBAR_OFFSET.0 + HEALTHBAR_SIZE.0 * health_factor,
-            state.y + HEALTHBAR_OFFSET.1,
-            HEALTHBAR_SIZE.0 - HEALTHBAR_SIZE.0 * health_factor,
-            HEALTHBAR_SIZE.1,
+            state.x + healthbar_offset.0 + healthbar_size.0 * health_factor,
+            state.y + healthbar_offset.1,
+            healthbar_size.0 - healthbar_size.0 * health_factor,
+            healthbar_size.1,
             COLOR_RED
         )?;
         Ok(())
@@ -102,10 +97,9 @@ impl EntityTrait for Player {
 
     fn collided(&mut self,
                 self_state: &mut EntityState,
-                _other: &Box<EntityTrait>,
-                other_state: &mut EntityState,
-                _graphics: &EngineGraphics)
-                -> Vec<EntityEvent> {
+                _other: &Box<EntityTrait<GraphicsEnum>>,
+                other_state: &mut EntityState)
+                -> Vec<EntityEvent<GraphicsEnum>> {
         self.health -= 1;
         other_state.active = false;
         

@@ -1,16 +1,12 @@
-use glium::{Blend, DrawParameters, IndexBuffer, VertexBuffer, Surface};
+use glium::{IndexBuffer, VertexBuffer};
 use glium::texture::{RawImage2d, Texture2d};
-use glium::uniforms::UniformsStorage;
 use glium::index::PrimitiveType;
 use std::io::Cursor;
 use image;
 
-use super::{EngineGraphics, Result};
-
-static mut DRAW_HELPER_ID: u64 = 1;
+use super::{EngineGraphics, Result, TGraphicIndex};
 
 pub struct DrawHelper {
-    pub id: u64,
     pub vertex_buffer: VertexBuffer<Vertex>,
     pub index_buffer: IndexBuffer<u8>,
     pub texture: Texture2d,
@@ -19,16 +15,11 @@ pub struct DrawHelper {
 }
 
 impl DrawHelper {
-    pub fn new(engine: &EngineGraphics,
+    pub fn new<T: TGraphicIndex>(engine: &EngineGraphics<T>,
                width: f32,
                height: f32,
                texture: &[u8])
                -> Result<DrawHelper> {
-        let id = unsafe {
-            let id = DRAW_HELPER_ID;
-            DRAW_HELPER_ID += 1;
-            id
-        };
 
         let vertex_buffer = VertexBuffer::new(&engine.display,
                                               &[Vertex {
@@ -57,42 +48,12 @@ impl DrawHelper {
         let texture = Texture2d::new(&engine.display, image)?;
 
         Ok(DrawHelper {
-            id: id,
             vertex_buffer: vertex_buffer,
             index_buffer: index_buffer,
             texture: texture,
             width: width,
             height: height,
         })
-    }
-
-    pub fn draw_at(&self,
-                   graphics: &mut EngineGraphics,
-                   x: f32,
-                   y: f32,
-                   rotation: f32,
-                   scale: f32)
-                   -> Result<()> {
-        let matrix = [[scale * rotation.cos(), scale * rotation.sin(), 0.0],
-                      [-scale * rotation.sin(), scale * rotation.cos(), 0.0],
-                      [x, y, 1.0f32]];
-        let uniform = UniformsStorage::new("matrix", matrix);
-        let uniform = uniform.add("tex", &self.texture);
-        let uniform = uniform.add("screen_size",
-                                  [graphics.width as f32, graphics.height as f32]);
-
-        let draw_parameters =
-            DrawParameters { blend: Blend::alpha_blending(), ..DrawParameters::default() };
-
-        if let Some(ref mut frame) = graphics.frame {
-            frame.draw(&self.vertex_buffer,
-                      &self.index_buffer,
-                      &graphics.textured_program,
-                      &uniform,
-                      &draw_parameters)?;
-        }
-
-        Ok(())
     }
 }
 

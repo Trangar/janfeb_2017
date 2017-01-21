@@ -1,6 +1,6 @@
-mod bullet;
+pub mod bullet;
 mod bullet_spawner;
-mod player;
+pub mod player;
 //mod you_lost;
 
 pub use self::bullet_spawner::BulletSpawner;

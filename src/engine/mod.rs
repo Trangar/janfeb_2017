@@ -1,37 +1,41 @@
-mod error;
-mod draw_helper;
-mod entity;
 mod keyboard_state;
+mod engine_graphics;
+mod draw_helper;
+mod game_state;
+mod entity;
+mod error;
 mod time;
 
+pub use self::engine_graphics::EngineGraphics;
 pub use self::keyboard_state::KeyboardState;
 pub use self::draw_helper::DrawHelper;
+pub use self::game_state::GameState;
 pub use self::error::Result;
 pub use self::entity::*;
 
-use glium::{DisplayBuild, DrawParameters, IndexBuffer, Frame, VertexBuffer, Program, Surface};
-use glium::glutin::{Event, ElementState, WindowBuilder};
-use glium::backend::glutin_backend::GlutinFacade;
-use glium::uniforms::UniformsStorage;
-use glium::index::PrimitiveType;
+use glium::glutin::{Event, ElementState};
+use std::hash::Hash;
+use glium::Surface;
 
 pub use glium::glutin::VirtualKeyCode;
 pub use std::rc::Rc;
 
-pub struct Engine {
-    pub graphics: EngineGraphics,
+pub trait TGraphicIndex : PartialEq + Eq + Hash {}
+
+pub struct Engine<T: TGraphicIndex> {
+    pub graphics: EngineGraphics<T>,
     pub keyboard: KeyboardState,
     pub running: bool,
 
     pub last_update_time: u64,
-    pub entities: Vec<EntityWrapper>,
+    pub entities: Vec<EntityWrapper<T>>,
     pub rng: ::rand::ThreadRng,
 }
 
-impl Engine {
-    pub fn new(width: f32, height: f32) -> Result<Engine> {
+impl<T: TGraphicIndex> Engine<T> {
+    pub fn new(width: f32, height: f32) -> Result<Engine<T>> {
         let engine = Engine {
-            graphics: EngineGraphics::new(width, height)?,
+            graphics: EngineGraphics::<T>::new(width, height)?,
             keyboard: KeyboardState::default(),
             running: true,
             last_update_time: self::time::get(),
@@ -41,7 +45,7 @@ impl Engine {
         Ok(engine)
     }
 
-    pub fn register_entity<T: EntityTrait + 'static>(&mut self, entity: T) {
+    pub fn register_entity<TEntity: EntityTrait<T> + 'static>(&mut self, entity: TEntity) {
         let wrapper = EntityWrapper::new(Box::new(entity), self);
         self.entities.push(wrapper);
     }
@@ -64,7 +68,7 @@ impl Engine {
         Ok(())
     }
 
-    fn handle_event(&mut self, events: Vec<EntityEvent>) {
+    fn handle_event(&mut self, events: Vec<EntityEvent<T>>) {
         for result in events.into_iter() {
             match result {
                 EntityEvent::SpawnEntity(entity) => {
@@ -87,11 +91,11 @@ impl Engine {
                 let ref mut first = first.last_mut().unwrap();
                 for ref mut second in remaining.iter_mut() {
                     if first.entity.intersects_with(&first.state, &second.entity, &second.state) {
-                        let results = first.entity.collided(&mut first.state, &second.entity, &mut second.state, &self.graphics);
+                        let results = first.entity.collided(&mut first.state, &second.entity, &mut second.state);
                         events.extend(results.into_iter());
                     }
                     if second.entity.intersects_with(&second.state, &first.entity, &first.state) {
-                        let results = second.entity.collided(&mut second.state, &first.entity, &mut first.state, &self.graphics);
+                        let results = second.entity.collided(&mut second.state, &first.entity, &mut first.state);
                         events.extend(results.into_iter());
                     }
                 }
@@ -166,80 +170,5 @@ impl Engine {
                 _ => (),
             }
         }
-    }
-}
-
-#[derive(Copy, Clone)]
-pub struct Vertex {
-    pub dimension_affinity: [f32; 2],
-}
-
-implement_vertex!(Vertex, dimension_affinity);
-
-pub struct EngineGraphics {
-    pub display: GlutinFacade,
-    pub textured_program: Program,
-    pub color_program: Program,
-    pub frame: Option<Frame>,
-    pub width: f32,
-    pub height: f32,
-
-    rectangle_vertex_buffer: VertexBuffer<Vertex>,
-    rectangle_index_buffer: IndexBuffer<u8>,
-}
-
-impl EngineGraphics {
-    pub fn new(width: f32, height: f32) -> Result<EngineGraphics> {
-        let display = WindowBuilder::new().with_dimensions(width as u32, height as u32)
-            .with_min_dimensions(width as u32, height as u32)
-            .with_max_dimensions(width as u32, height as u32)
-            .with_vsync()
-            .build_glium()?;
-        let textured_program =
-            Program::from_source(&display,
-                                 include_str!("../../assets/textured_shader.vert"),
-                                 include_str!("../../assets/textured_shader.frag"),
-                                 None)?;
-        let color_program = Program::from_source(&display,
-                                                 include_str!("../../assets/color_shader.vert"),
-                                                 include_str!("../../assets/color_shader.frag"),
-                                                 None)?;
-
-        println!("{:?}", display.get_opengl_version());
-
-        let rectangle_vertex_buffer = VertexBuffer::new(&display,
-                                            &[Vertex { dimension_affinity: [0f32, 0f32] },
-                                              Vertex { dimension_affinity: [1f32, 0f32] },
-                                              Vertex { dimension_affinity: [0f32, 1f32] },
-                                              Vertex { dimension_affinity: [1f32, 1f32] }])?;
-
-        let rectangle_index_buffer = IndexBuffer::<u8>::new(&display,
-                                                PrimitiveType::TriangleStrip,
-                                                &[0, 1, 2, 3])?;
-
-        Ok(EngineGraphics {
-            display: display,
-            textured_program: textured_program,
-            color_program: color_program,
-            frame: None,
-            width: width,
-            height: height,
-            rectangle_vertex_buffer: rectangle_vertex_buffer,
-            rectangle_index_buffer: rectangle_index_buffer
-        })
-    }
-    pub fn draw_rectangle(&mut self, x: f32, y: f32, width: f32, height: f32, color: (f32, f32, f32, f32)) -> Result<()> {
-        if let Some(ref mut frame) = self.frame {
-            let uniform = UniformsStorage::new("offset", [x, y]);
-            let uniform = uniform.add("dimensions", [width, height]);
-            let uniform = uniform.add("color", color);
-            let uniform = uniform.add("screen_size", [self.width as f32, self.height as f32]);
-            frame.draw(&self.rectangle_vertex_buffer,
-                    &self.rectangle_index_buffer,
-                    &self.color_program,
-                    &uniform,
-                    &DrawParameters::default())?;
-        }
-        Ok(())
     }
 }
