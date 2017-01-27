@@ -1,10 +1,11 @@
 use engine::{Engine, EngineGraphics, GameState, TGraphicIndex, Result};
-use super::{EntityEvent, EntityState};
+use super::{CollisionLayer, EntityEvent, EntityState};
 
 pub trait EntityTrait<T: TGraphicIndex> {
     fn identifying_string(&self) -> String;
-    //fn collision_layers(&self) -> Vec<CollisionLayer> { Vec::new() }
-    //fn collides_with_layers(&self) -> Vec<CollisionLayer> { Vec::new() }
+    fn default_graphic(&self) -> Option<T> { None }
+    fn collision_layers(&self) -> Option<CollisionLayer> { None }
+    fn collides_with_layers(&self) -> Vec<CollisionLayer> { Vec::new() }
     fn draw(&self, _state: &EntityState, _graphics: &mut EngineGraphics<T>) -> Result<()> {
         Ok(())
     }

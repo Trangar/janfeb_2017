@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Victor Koenders <victor.koenders@gmail.com>"]
 
 [dependencies]
+glium_text = "*"
 glium = "*"
 image = "*"
 time = "*"

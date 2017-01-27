@@ -8,11 +8,18 @@ pub use self::wrapper::EntityWrapper;
 
 use super::TGraphicIndex;
 
+#[derive(PartialEq, Eq, Hash)]
+#[allow(dead_code)]
+pub enum CollisionLayer {
+    Player,
+    Enemy,
+}
+
 pub enum EntityEvent<T: TGraphicIndex> {
+    #[allow(dead_code)]
     ClearAllEntities,
     SpawnEntity(Box<EntityTrait<T>>),
 }
-
 
 #[derive(Default)]
 pub struct Hitbox {

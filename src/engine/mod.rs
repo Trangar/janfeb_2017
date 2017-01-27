@@ -1,5 +1,6 @@
-mod keyboard_state;
 mod engine_graphics;
+mod keyboard_state;
+mod text_graphics;
 mod draw_helper;
 mod game_state;
 mod entity;
@@ -8,12 +9,14 @@ mod time;
 
 pub use self::engine_graphics::EngineGraphics;
 pub use self::keyboard_state::KeyboardState;
+pub use self::text_graphics::TextGraphics;
 pub use self::draw_helper::DrawHelper;
 pub use self::game_state::GameState;
 pub use self::error::Result;
 pub use self::entity::*;
 
 use glium::glutin::{Event, ElementState};
+use std::collections::HashMap;
 use std::hash::Hash;
 use glium::Surface;
 
@@ -22,24 +25,28 @@ pub use std::rc::Rc;
 
 pub trait TGraphicIndex : PartialEq + Eq + Hash {}
 
-pub struct Engine<T: TGraphicIndex> {
+pub type Color = (f32, f32, f32, f32);
+
+pub struct Engine<'a, T: 'a + TGraphicIndex> {
     pub graphics: EngineGraphics<T>,
     pub keyboard: KeyboardState,
     pub running: bool,
 
     pub last_update_time: u64,
     pub entities: Vec<EntityWrapper<T>>,
+    pub layered_entities: HashMap<CollisionLayer, Vec<&'a EntityWrapper<T>>>,
     pub rng: ::rand::ThreadRng,
 }
 
-impl<T: TGraphicIndex> Engine<T> {
-    pub fn new(width: f32, height: f32) -> Result<Engine<T>> {
+impl<'a, T: TGraphicIndex> Engine<'a, T> {
+    pub fn new(width: f32, height: f32) -> Result<Engine<'a, T>> {
         let engine = Engine {
             graphics: EngineGraphics::<T>::new(width, height)?,
             keyboard: KeyboardState::default(),
             running: true,
             last_update_time: self::time::get(),
             entities: Vec::new(),
+            layered_entities: HashMap::new(),
             rng: ::rand::thread_rng(),
         };
         Ok(engine)
@@ -65,6 +72,7 @@ impl<T: TGraphicIndex> Engine<T> {
         if let Some(frame) = self.graphics.frame.take() {
             frame.finish()?;
         }
+        self.graphics.text_graphics.frame_end();
         Ok(())
     }
 

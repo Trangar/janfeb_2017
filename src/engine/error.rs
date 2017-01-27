@@ -16,6 +16,7 @@ pub struct Error {
 
 #[derive(Debug)]
 pub enum ErrorEnum {
+    NoContext,
     GliumCreationError(GliumCreationError<CreationError>),
     ProgramCreationError(ProgramCreationError),
     TextureCreationError(TextureCreationError),
@@ -118,6 +119,15 @@ impl From<ImageError> for Error {
         Error {
             description: format!("Image error: {:?}", error),
             error_type: ErrorEnum::ImageError(error),
+        }
+    }
+}
+
+impl From<()> for Error {
+    fn from(_: ()) -> Self {
+        Error {
+            description: format!("No context error"),
+            error_type: ErrorEnum::NoContext
         }
     }
 }

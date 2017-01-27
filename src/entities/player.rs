@@ -26,8 +26,9 @@ impl Player {
     }
 }
 
-const COLOR_GREEN: (f32, f32, f32, f32) = (0.0, 1.0, 0.0, 1.0);
-const COLOR_RED: (f32, f32, f32, f32) = (1.0, 0.0, 0.0, 1.0);
+const COLOR_WHITE: Color = (1.0, 1.0, 1.0, 1.0);
+const COLOR_GREEN: Color = (0.0, 1.0, 0.0, 1.0);
+const COLOR_RED: Color = (1.0, 0.0, 0.0, 1.0);
 
 impl EntityTrait<GraphicsEnum> for Player {
     fn identifying_string(&self) -> String { "Player".to_owned() }
@@ -92,6 +93,8 @@ impl EntityTrait<GraphicsEnum> for Player {
             healthbar_size.1,
             COLOR_RED
         )?;
+
+        graphics.draw_text_at("Hello".to_owned(), state.x + healthbar_offset.0, state.y + healthbar_offset.1 - 15f32, COLOR_WHITE)?;
         Ok(())
     }
 

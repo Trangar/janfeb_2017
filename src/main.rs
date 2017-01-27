@@ -1,5 +1,5 @@
-#[macro_use]
-extern crate glium;
+#[macro_use] extern crate glium;
+extern crate glium_text;
 extern crate image;
 extern crate time;
 extern crate rand;

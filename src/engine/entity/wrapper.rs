@@ -1,5 +1,5 @@
-use super::{EntityState, EntityTrait};
 use engine::{Engine, TGraphicIndex};
+use super::{EntityState, EntityTrait};
 
 // TODO: Cache default drawing helper and draw that automatically when it has one
 pub struct EntityWrapper<T: TGraphicIndex> {
