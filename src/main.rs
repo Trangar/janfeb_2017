@@ -8,12 +8,22 @@ extern crate rand;
 mod engine;
 mod entities;
 
-use engine::Engine;
+use engine::{Engine, EntityTrait};
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum GraphicsEnum {
     Bullet,
     Spaceship,
+    YouLost,
+}
+
+fn get_initial_state() -> Vec<Box<EntityTrait<GraphicsEnum>>> {
+    let spawner = entities::BulletSpawner::new();
+    let player = entities::Player::new();
+    vec![
+        Box::new(spawner),
+        Box::new(player)
+    ]
 }
 
 impl engine::TGraphicIndex for GraphicsEnum {}
@@ -32,12 +42,16 @@ fn main() {
                       entities::player::WIDTH,
                       entities::player::HEIGHT)
         .unwrap();
+    engine.graphics
+        .load_graphic(GraphicsEnum::YouLost,
+                      include_bytes!("../assets/you_lost.png"),
+                      entities::you_lost::WIDTH,
+                      entities::you_lost::HEIGHT)
+        .unwrap();
 
-    let spawner = entities::BulletSpawner::new();
-    let player = entities::Player::new();
-
-    engine.register_entity(spawner);
-    engine.register_entity(player);
+    for entity in get_initial_state().into_iter(){
+        engine.register_entity(entity);
+    }
 
     engine.run();
 }

@@ -8,7 +8,7 @@ pub use self::wrapper::EntityWrapper;
 
 use super::TGraphicIndex;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 #[allow(dead_code)]
 pub enum CollisionLayer {
     Player,

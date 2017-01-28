@@ -23,19 +23,19 @@ impl DrawHelper {
 
         let vertex_buffer = VertexBuffer::new(&engine.display,
                                               &[Vertex {
-                                                    position: [-width / 2f32, -height / 2f32],
+                                                    position: [-width / 2f32, height / 2f32],
                                                     tex_coords: [0.0, 0.0],
                                                 },
                                                 Vertex {
-                                                    position: [width / 2f32, -height / 2f32],
+                                                    position: [width / 2f32, height / 2f32],
                                                     tex_coords: [1.0, 0.0],
                                                 },
                                                 Vertex {
-                                                    position: [-width / 2f32, height / 2f32],
+                                                    position: [-width / 2f32, -height / 2f32],
                                                     tex_coords: [0.0, 1.0],
                                                 },
                                                 Vertex {
-                                                    position: [width / 2f32, height / 2f32],
+                                                    position: [width / 2f32, -height / 2f32],
                                                     tex_coords: [1.0, 1.0],
                                                 }])?;
 

@@ -1,24 +1,41 @@
+use get_initial_state;
+use GraphicsEnum;
 use engine::*;
 
 pub struct YouLost {
-    pub drawable: DrawHelper,
 }
 
-const WIDTH: f32 = 128f32;
-const HEIGHT: f32 = 64f32;
+pub const WIDTH: f32 = 128f32;
+pub const HEIGHT: f32 = 64f32;
 
 impl YouLost {
     pub fn new() -> Result<YouLost> {
         Ok(YouLost {
-            drawable: DrawHelper::new(get_engine().unwrap().graphics, WIDTH, HEIGHT)?
         })
     }
 }
 
-impl EntityTrait for YouLost {
+impl EntityTrait<GraphicsEnum> for YouLost {
     fn identifying_string(&self) -> String { "You lost!".to_owned() }
 
-    fn draw(&self, state: &EntityState, graphics: &mut EngineGraphics) -> Result<()> {
-        self.drawable.draw_at(graphics, (graphics.width - WIDTH) / 2f32, (graphics.height - HEIGHT) / 2f32, 0f32, 1f32)
+    fn draw(&self, _: &EntityState, graphics: &mut EngineGraphics<GraphicsEnum>) -> Result<()> {
+        let x = graphics.width / 2f32;
+        let y = graphics.height / 2f32;
+        graphics.draw(GraphicsEnum::YouLost, x, y, 0.0f32, 1.0f32)
+    }
+
+    fn update(&mut self,
+              game_state: &mut GameState,
+              state: &mut EntityState)
+              -> Vec<EntityEvent<GraphicsEnum>> {
+        if game_state.keyboard.is_pressed_this_frame(VirtualKeyCode::Space) {
+            state.active = false;
+            
+            let mut response = get_initial_state().into_iter().map(|s| EntityEvent::SpawnEntity(s)).collect::<Vec<_>>();
+            response.insert(0, EntityEvent::ClearAllEntities);
+            response
+        } else {
+            Vec::new()
+        }
     }
 }

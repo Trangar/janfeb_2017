@@ -1,8 +1,10 @@
 use GraphicsEnum;
 use engine::*;
-// use super::YouLost;
+use super::{Bullet,YouLost};
 
-// const PLAYER_FIRE_POINTS: [[f32;2];2] = [[-10.0, -25.0],[-10.0,25.0]];
+const PLAYER_FIRE_POINTS: [[f32;2];2] = [[-10.0, -25.0],[-10.0,25.0]];
+const PLAYER_FIRE_INTERVAL: f32 = 200f32;
+
 pub const WIDTH: f32 = 128.0;
 pub const HEIGHT: f32 = 64.0;
 const HORIZONTAL_SPEED: f32 = 0.15f32;
@@ -33,6 +35,12 @@ const COLOR_RED: Color = (1.0, 0.0, 0.0, 1.0);
 impl EntityTrait<GraphicsEnum> for Player {
     fn identifying_string(&self) -> String {
         "Player".to_owned()
+    }
+    fn collision_layers(&self) -> Option<CollisionLayer> {
+        Some(CollisionLayer::Player)
+    }
+    fn collides_with_layers(&self) -> Vec<CollisionLayer> {
+        vec![CollisionLayer::Enemy]
     }
     fn get_initial_state(&self, engine: &Engine<GraphicsEnum>) -> EntityState {
         let hitbox = Hitbox {
@@ -79,7 +87,19 @@ impl EntityTrait<GraphicsEnum> for Player {
                  state.hitbox.top,
                  game_state.screen_height - state.hitbox.bottom);
 
-        Vec::new()
+        let mut result = Vec::new();
+        if self.last_bullet_time < game_state.delta_time {
+            self.last_bullet_time = PLAYER_FIRE_INTERVAL;
+            let position = PLAYER_FIRE_POINTS[self.last_bullet_position_index as usize];
+            self.last_bullet_position_index = (self.last_bullet_position_index + 1) % 2;
+
+            let bullet = Bullet::new(state.x + position[0], state.y + position[1], true);
+            result.push(EntityEvent::SpawnEntity(Box::new(bullet)));
+        } else {
+            self.last_bullet_time -= game_state.delta_time;
+        }
+
+        result
     }
 
     fn draw(&self, state: &EntityState, graphics: &mut EngineGraphics<GraphicsEnum>) -> Result<()> {
@@ -116,13 +136,13 @@ impl EntityTrait<GraphicsEnum> for Player {
 
         if self.health == 0 {
             self_state.active = false;
-            //let you_lost = Box::new(YouLost::new().unwrap());
-            //vec![
-            //    EntityEvent::SpawnEntity(you_lost)
-            //]
-        } //else {
-        Vec::new()
-        //
+            let you_lost = Box::new(YouLost::new().unwrap());
+            vec![
+                EntityEvent::SpawnEntity(you_lost)
+            ]
+        } else {
+            Vec::new()
+        }
     }
 }
 

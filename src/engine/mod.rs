@@ -16,44 +16,40 @@ pub use self::error::Result;
 pub use self::entity::*;
 
 use glium::glutin::{Event, ElementState};
-use std::collections::HashMap;
 use std::hash::Hash;
 use glium::Surface;
 
 pub use glium::glutin::VirtualKeyCode;
-pub use std::rc::Rc;
 
 pub trait TGraphicIndex: PartialEq + Eq + Hash {}
 
 pub type Color = (f32, f32, f32, f32);
 
-pub struct Engine<'a, T: 'a + TGraphicIndex> {
+pub struct Engine<T: TGraphicIndex> {
     pub graphics: EngineGraphics<T>,
     pub keyboard: KeyboardState,
     pub running: bool,
 
     pub last_update_time: u64,
     pub entities: Vec<EntityWrapper<T>>,
-    pub layered_entities: HashMap<CollisionLayer, Vec<&'a EntityWrapper<T>>>,
     pub rng: ::rand::ThreadRng,
 }
 
-impl<'a, T: TGraphicIndex> Engine<'a, T> {
-    pub fn new(width: f32, height: f32) -> Result<Engine<'a, T>> {
+impl<T: TGraphicIndex> Engine<T> {
+    pub fn new(width: f32, height: f32) -> Result<Engine<T>> {
         let engine = Engine {
             graphics: EngineGraphics::<T>::new(width, height)?,
             keyboard: KeyboardState::default(),
             running: true,
             last_update_time: self::time::get(),
             entities: Vec::new(),
-            layered_entities: HashMap::new(),
             rng: ::rand::thread_rng(),
         };
         Ok(engine)
     }
 
-    pub fn register_entity<TEntity: EntityTrait<T> + 'static>(&mut self, entity: TEntity) {
-        let wrapper = EntityWrapper::new(Box::new(entity), self);
+    pub fn register_entity(&mut self, entity: Box<EntityTrait<T>>) {
+        let wrapper = EntityWrapper::new(entity, self);
         self.entities.push(wrapper);
     }
 
@@ -80,14 +76,24 @@ impl<'a, T: TGraphicIndex> Engine<'a, T> {
         for result in events.into_iter() {
             match result {
                 EntityEvent::SpawnEntity(entity) => {
-                    let wrapper = EntityWrapper::new(entity, self);
-                    self.entities.push(wrapper);
+                    self.register_entity(entity);
                 }
                 EntityEvent::ClearAllEntities => {
                     self.entities.clear();
                 }
             }
         }
+    }
+
+    fn check_collision_between(first: &mut EntityWrapper<T>, second: &mut EntityWrapper<T>) -> Vec<EntityEvent<T>> {
+        if let Some(layer) = first.entity.collision_layers() {
+            if second.entity.collides_with_layers().contains(&layer) {
+                if first.entity.intersects_with(&first.state, &second.entity, &second.state) {
+                    return first.entity.collided(&mut first.state, &second.entity, &mut second.state);
+                }
+            }
+        }
+        return Vec::new();
     }
 
     fn check_collisions(&mut self) {
@@ -98,16 +104,8 @@ impl<'a, T: TGraphicIndex> Engine<'a, T> {
                 let (ref mut first, ref mut remaining) = slice.split_at_mut(i);
                 let ref mut first = first.last_mut().unwrap();
                 for ref mut second in remaining.iter_mut() {
-                    if first.entity.intersects_with(&first.state, &second.entity, &second.state) {
-                        let results = first.entity
-                            .collided(&mut first.state, &second.entity, &mut second.state);
-                        events.extend(results.into_iter());
-                    }
-                    if second.entity.intersects_with(&second.state, &first.entity, &first.state) {
-                        let results = second.entity
-                            .collided(&mut second.state, &first.entity, &mut first.state);
-                        events.extend(results.into_iter());
-                    }
+                    events.extend(Engine::check_collision_between(first, second).into_iter());
+                    events.extend(Engine::check_collision_between(second, first).into_iter());
                 }
             }
             events
