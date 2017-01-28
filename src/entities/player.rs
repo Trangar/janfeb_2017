@@ -1,6 +1,6 @@
 use GraphicsEnum;
 use engine::*;
-//use super::YouLost;
+// use super::YouLost;
 
 // const PLAYER_FIRE_POINTS: [[f32;2];2] = [[-10.0, -25.0],[-10.0,25.0]];
 pub const WIDTH: f32 = 128.0;
@@ -31,7 +31,9 @@ const COLOR_GREEN: Color = (0.0, 1.0, 0.0, 1.0);
 const COLOR_RED: Color = (1.0, 0.0, 0.0, 1.0);
 
 impl EntityTrait<GraphicsEnum> for Player {
-    fn identifying_string(&self) -> String { "Player".to_owned() }
+    fn identifying_string(&self) -> String {
+        "Player".to_owned()
+    }
     fn get_initial_state(&self, engine: &Engine<GraphicsEnum>) -> EntityState {
         let hitbox = Hitbox {
             left: 58f32,
@@ -47,7 +49,10 @@ impl EntityTrait<GraphicsEnum> for Player {
         }
     }
 
-    fn update(&mut self, game_state: &mut GameState, state: &mut EntityState) -> Vec<EntityEvent<GraphicsEnum>> {
+    fn update(&mut self,
+              game_state: &mut GameState,
+              state: &mut EntityState)
+              -> Vec<EntityEvent<GraphicsEnum>> {
         let mut x = 0f32;
         let mut y = 0f32;
 
@@ -67,8 +72,12 @@ impl EntityTrait<GraphicsEnum> for Player {
         state.x += x * HORIZONTAL_SPEED * game_state.delta_time;
         state.y += y * VERTICAL_SPEED * game_state.delta_time;
 
-        clamp_to(&mut state.x, state.hitbox.left, game_state.screen_width - state.hitbox.right);
-        clamp_to(&mut state.y, state.hitbox.top, game_state.screen_height - state.hitbox.bottom);
+        clamp_to(&mut state.x,
+                 state.hitbox.left,
+                 game_state.screen_width - state.hitbox.right);
+        clamp_to(&mut state.y,
+                 state.hitbox.top,
+                 game_state.screen_height - state.hitbox.bottom);
 
         Vec::new()
     }
@@ -79,22 +88,21 @@ impl EntityTrait<GraphicsEnum> for Player {
         let health_factor = (self.health as f32) / (self.max_health as f32);
         let healthbar_offset: (f32, f32) = (-state.hitbox.left * 0.75, -(state.hitbox.top + 10f32));
         let healthbar_size: (f32, f32) = ((state.hitbox.left + state.hitbox.right) * 0.5, 5f32);
-        graphics.draw_rectangle(
-            state.x + healthbar_offset.0,
-            state.y + healthbar_offset.1,
-            healthbar_size.0 * health_factor, 
-            healthbar_size.1,
-            COLOR_GREEN
-        )?;
-        graphics.draw_rectangle(
-            state.x + healthbar_offset.0 + healthbar_size.0 * health_factor,
-            state.y + healthbar_offset.1,
-            healthbar_size.0 - healthbar_size.0 * health_factor,
-            healthbar_size.1,
-            COLOR_RED
-        )?;
+        graphics.draw_rectangle(state.x + healthbar_offset.0,
+                            state.y + healthbar_offset.1,
+                            healthbar_size.0 * health_factor,
+                            healthbar_size.1,
+                            COLOR_GREEN)?;
+        graphics.draw_rectangle(state.x + healthbar_offset.0 + healthbar_size.0 * health_factor,
+                            state.y + healthbar_offset.1,
+                            healthbar_size.0 - healthbar_size.0 * health_factor,
+                            healthbar_size.1,
+                            COLOR_RED)?;
 
-        graphics.draw_text_at("Hello".to_owned(), state.x + healthbar_offset.0, state.y + healthbar_offset.1 - 15f32, COLOR_WHITE)?;
+        graphics.draw_text_at("Hello".to_owned(),
+                          state.x + healthbar_offset.0,
+                          state.y + healthbar_offset.1 - 15f32,
+                          COLOR_WHITE)?;
         Ok(())
     }
 
@@ -105,7 +113,7 @@ impl EntityTrait<GraphicsEnum> for Player {
                 -> Vec<EntityEvent<GraphicsEnum>> {
         self.health -= 1;
         other_state.active = false;
-        
+
         if self.health == 0 {
             self_state.active = false;
             //let you_lost = Box::new(YouLost::new().unwrap());
@@ -113,12 +121,16 @@ impl EntityTrait<GraphicsEnum> for Player {
             //    EntityEvent::SpawnEntity(you_lost)
             //]
         } //else {
-            Vec::new()
-        //}
+        Vec::new()
+        //
     }
 }
 
 fn clamp_to(value: &mut f32, min: f32, max: f32) {
-    if *value < min { *value = min; }
-    if *value > max { *value = max; }
+    if *value < min {
+        *value = min;
+    }
+    if *value > max {
+        *value = max;
+    }
 }

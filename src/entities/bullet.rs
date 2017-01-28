@@ -21,7 +21,9 @@ impl Bullet {
 }
 
 impl EntityTrait<GraphicsEnum> for Bullet {
-    fn identifying_string(&self) -> String { format!("Bullet {}", self.id) }
+    fn identifying_string(&self) -> String {
+        format!("Bullet {}", self.id)
+    }
     fn get_initial_state(&self, _: &Engine<GraphicsEnum>) -> EntityState {
         let hitbox = Hitbox {
             left: 6f32,
@@ -37,7 +39,10 @@ impl EntityTrait<GraphicsEnum> for Bullet {
         }
     }
 
-    fn update(&mut self, game_state: &mut GameState, state: &mut EntityState) -> Vec<EntityEvent<GraphicsEnum>> {
+    fn update(&mut self,
+              game_state: &mut GameState,
+              state: &mut EntityState)
+              -> Vec<EntityEvent<GraphicsEnum>> {
         state.x -= 0.1f32 * game_state.delta_time;
 
         if state.x + state.hitbox.right < 0f32 {

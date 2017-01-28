@@ -23,7 +23,7 @@ use glium::Surface;
 pub use glium::glutin::VirtualKeyCode;
 pub use std::rc::Rc;
 
-pub trait TGraphicIndex : PartialEq + Eq + Hash {}
+pub trait TGraphicIndex: PartialEq + Eq + Hash {}
 
 pub type Color = (f32, f32, f32, f32);
 
@@ -82,7 +82,7 @@ impl<'a, T: TGraphicIndex> Engine<'a, T> {
                 EntityEvent::SpawnEntity(entity) => {
                     let wrapper = EntityWrapper::new(entity, self);
                     self.entities.push(wrapper);
-                },
+                }
                 EntityEvent::ClearAllEntities => {
                     self.entities.clear();
                 }
@@ -99,11 +99,13 @@ impl<'a, T: TGraphicIndex> Engine<'a, T> {
                 let ref mut first = first.last_mut().unwrap();
                 for ref mut second in remaining.iter_mut() {
                     if first.entity.intersects_with(&first.state, &second.entity, &second.state) {
-                        let results = first.entity.collided(&mut first.state, &second.entity, &mut second.state);
+                        let results = first.entity
+                            .collided(&mut first.state, &second.entity, &mut second.state);
                         events.extend(results.into_iter());
                     }
                     if second.entity.intersects_with(&second.state, &first.entity, &first.state) {
-                        let results = second.entity.collided(&mut second.state, &first.entity, &mut first.state);
+                        let results = second.entity
+                            .collided(&mut second.state, &first.entity, &mut first.state);
                         events.extend(results.into_iter());
                     }
                 }

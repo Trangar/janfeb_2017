@@ -19,8 +19,13 @@ impl BulletSpawner {
 }
 
 impl EntityTrait<GraphicsEnum> for BulletSpawner {
-    fn identifying_string(&self) -> String { "Bullet spawner".to_owned() }
-    fn update(&mut self, game_state: &mut GameState, _: &mut EntityState) -> Vec<EntityEvent<GraphicsEnum>> {
+    fn identifying_string(&self) -> String {
+        "Bullet spawner".to_owned()
+    }
+    fn update(&mut self,
+              game_state: &mut GameState,
+              _: &mut EntityState)
+              -> Vec<EntityEvent<GraphicsEnum>> {
         self.time_counter += game_state.delta_time;
         let mut result = Vec::new();
         while self.time_counter > BULLET_SPAWN_INTERVAL {

@@ -127,7 +127,7 @@ impl From<()> for Error {
     fn from(_: ()) -> Self {
         Error {
             description: format!("No context error"),
-            error_type: ErrorEnum::NoContext
+            error_type: ErrorEnum::NoContext,
         }
     }
 }

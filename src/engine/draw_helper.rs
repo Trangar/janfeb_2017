@@ -16,10 +16,10 @@ pub struct DrawHelper {
 
 impl DrawHelper {
     pub fn new<T: TGraphicIndex>(engine: &EngineGraphics<T>,
-               width: f32,
-               height: f32,
-               texture: &[u8])
-               -> Result<DrawHelper> {
+                                 width: f32,
+                                 height: f32,
+                                 texture: &[u8])
+                                 -> Result<DrawHelper> {
 
         let vertex_buffer = VertexBuffer::new(&engine.display,
                                               &[Vertex {
