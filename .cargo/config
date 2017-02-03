@@ -5,3 +5,6 @@ rustc-link-lib = ["freetype"]
 [target.x86_64-pc-windows-msvc.freetype]
 rustc-link-search = [".cargo\\freetype\\x86_64"]
 rustc-link-lib = ["freetype"]
+
+[target.x86_64-apple-darwin.freetype]
+rustc-link-lib = "freetype:dylib"
