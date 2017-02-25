@@ -9,7 +9,7 @@ script:
   - cargo build --release --verbose
 deploy:
   provider: releases
-  api_key: "$GITHUB_API_KEY"
+  api_key: "$GITHUB_TOKEN"
   file: "target/release/janfeb_2017"
   skip_cleanup: true
   on:
