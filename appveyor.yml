@@ -10,6 +10,7 @@ build_script:
   - mkdir output\assets
   - xcopy assets output\assets /y /E
   - xcopy target\release\janfeb.exe output /y
+  - xcopy .cargo\freetype\x86_64\freetype.dll output /y
   - dir output
 
 test_script:
