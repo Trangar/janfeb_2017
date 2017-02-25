@@ -9,11 +9,12 @@ script:
   - cargo build --release --verbose
 before_deploy:
   - cd target/release
-  - mv janfeb "${TRAVIS_OS_NAME}_janfeb"
+  env OUTPUT_FILE: ${TRAVIS_OS_NAME}_janfeb
+  - mv janfeb $OUTPUT_FILE
 deploy:
   provider: releases
   api_key: "$GITHUB_TOKEN"
-  file: "./target/release/${TRAVIS_OS_NAME}_janfeb"
+  file: "./target/release/${OUTPUT_FILE}"
   skip_cleanup: true
   on:
     tags: true
