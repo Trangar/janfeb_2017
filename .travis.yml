@@ -7,15 +7,16 @@ before_script:
 script:
   - cargo test --verbose --release -- --nocapture
   - cargo build --release --verbose
-before_deploy:
-  - cd target/release
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then mv janfeb osx_janfeb; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then mv janfeb linux_janfeb; fi
-  - ls
-deploy:
-  provider: releases
-  api_key: "$GITHUB_TOKEN"
-  file: "./target/release/${TRAVIS_OS_NAME}_janfeb"
-  skip_cleanup: true
-  on:
-    tags: true
+
+#before_deploy:
+#  - cd target/release
+#  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then mv janfeb osx_janfeb; fi
+#  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then mv janfeb linux_janfeb; fi
+#  - ls
+#deploy:
+#  provider: releases
+#  api_key: "$GITHUB_TOKEN"
+#  file: "./target/release/${TRAVIS_OS_NAME}_janfeb"
+#  skip_cleanup: true
+#  on:
+#    tags: true
