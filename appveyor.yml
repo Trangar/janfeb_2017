@@ -7,7 +7,8 @@ install:
 
 build_script:
   - cargo build --release
-  - ps: Push-AppveyorArtifact target/release/janfeb.exe .cargo/freetype/x86_64/freetype.dll
+  - ps: Push-AppveyorArtifact target/release/janfeb.exe
+  - ps: Push-AppveyorArtifact .cargo/freetype/x86_64/freetype.dll
 
 test_script:
   - cargo test --verbose --release -- --nocapture
