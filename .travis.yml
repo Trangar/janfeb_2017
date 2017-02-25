@@ -2,6 +2,8 @@ language: rust
 os:
   - linux
   - osx
+before_script:
+  - if [ "$TRAVIS_OS_NAME" =   "osx" ]; then brew install freetype
 script:
   - cargo test --verbose --release -- --nocapture
   - cargo build --release --verbose
