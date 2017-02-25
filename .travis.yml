@@ -2,6 +2,8 @@ language: rust
 os:
   - linux
   - osx
+env:
+  OUTPUT_FILE = ${TRAVIS_OS_NAME}_janfeb
 before_script:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install freetype ; fi
 script:
@@ -9,7 +11,6 @@ script:
   - cargo build --release --verbose
 before_deploy:
   - cd target/release
-  env OUTPUT_FILE: ${TRAVIS_OS_NAME}_janfeb
   - mv janfeb $OUTPUT_FILE
 deploy:
   provider: releases
