@@ -8,8 +8,8 @@ install:
 build_script:
   - cargo build --release
   - mkdir output
+  - robocopy assets output/assets /s /e
   - copy target\release\janfeb.exe output
-  - robocopy assets output/assets /s /e || 0
 
 test_script:
   - cargo test --verbose --release -- --nocapture
