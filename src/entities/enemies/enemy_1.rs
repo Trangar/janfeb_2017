@@ -63,7 +63,7 @@ impl EntityTrait<GraphicsEnum> for Enemy1 {
         state.x -= 0.3f32 * game_state.delta_time;
 
         if state.x > game_state.screen_width * ONETHIRD && state.x < game_state.screen_width * TWOTHIRD {
-            state.y += self.diagonal_direction * 0.1f32 * game_state.delta_time;
+            state.y += self.diagonal_direction * 0.2f32 * game_state.delta_time;
         }
 
         let mut result = Vec::new();

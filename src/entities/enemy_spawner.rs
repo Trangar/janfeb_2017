@@ -1,5 +1,5 @@
 use rand::{StdRng, SeedableRng, Rng};
-use super::{Enemy1, Enemy2, Enemy3};
+use super::{Enemy1, Enemy2};//, Enemy3};
 use GraphicsEnum;
 use engine::*;
 
@@ -12,17 +12,16 @@ pub struct EnemySpawner {
 
 impl EnemySpawner {
     pub fn new() -> EnemySpawner {
-        let mut spawner = EnemySpawner {
+        EnemySpawner {
             time_counter: 0f32,
             target_time_counter: 3000f32,
             enemy_amount_to_spawn: 3,
             rng: StdRng::from_seed(&[0usize]),
-        };
-        spawner
+        }
     }
 
     fn generate_time_target(&mut self) {
-        let factor = 5000f32 - ((self.enemy_amount_to_spawn - 3) * 100) as f32;
+        let factor = 5000f32 - ((self.enemy_amount_to_spawn - 3) * 10) as f32;
         self.target_time_counter = factor + self.rng.next_f32() * factor;
     }
 }
@@ -42,13 +41,22 @@ impl EntityTrait<GraphicsEnum> for EnemySpawner {
             let height = (game_state.screen_height) * self.rng.next_f32();
             let mut x = game_state.screen_width;
             let enemy_type = self.rng.next_u32() % 3 + 1;
-            println!("Spawning {} enemies at y {}!", self.enemy_amount_to_spawn, height);;
-            for i in 0..self.enemy_amount_to_spawn {
-                //match enemy_type {
-                //    
-                //}
-                let enemy = Enemy1::new(x, height, self.enemy_amount_to_spawn as f32);
-                result.push(EntityEvent::SpawnEntity(Box::new(enemy)));
+            for _ in 0..self.enemy_amount_to_spawn {
+                match enemy_type {
+                    3 => {
+                        let enemy = Enemy1::new(x, height, self.enemy_amount_to_spawn as f32);
+                        result.push(EntityEvent::SpawnEntity(Box::new(enemy)));
+                    },
+                    2 => {
+                        let enemy = Enemy2::new(x, height, self.enemy_amount_to_spawn as f32);
+                        result.push(EntityEvent::SpawnEntity(Box::new(enemy)));
+                    },
+                    1 => {
+                        let enemy = Enemy1::new(x, height, self.enemy_amount_to_spawn as f32);
+                        result.push(EntityEvent::SpawnEntity(Box::new(enemy)));
+                    },
+                    _ => unreachable!()
+                };
                 x += 50f32;
             }
             self.enemy_amount_to_spawn += 1;

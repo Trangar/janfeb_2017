@@ -64,9 +64,20 @@ impl<T: TGraphicIndex> Engine<T> {
         Ok(engine)
     }
 
+    #[cfg(debug_assertions)]
     pub fn register_entity(&mut self, entity: Box<EntityTrait<T>>) {
-        let wrapper = EntityWrapper::new(entity, self);
-        self.entities.push(wrapper);
+        if self.entities.len() < 200 {
+            let wrapper = EntityWrapper::new(entity, self);
+            self.entities.push(wrapper);
+        }
+    }
+
+    #[cfg(not(debug_assertions))]
+    pub fn register_entity(&mut self, entity: Box<EntityTrait<T>>) {
+        if self.entities.len() < 10000 {
+            let wrapper = EntityWrapper::new(entity, self);
+            self.entities.push(wrapper);
+        }
     }
 
     pub fn draw(&mut self) -> Result<()> {

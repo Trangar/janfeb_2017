@@ -32,8 +32,8 @@ fn get_initial_state() -> Vec<Box<EntityTrait<GraphicsEnum>>> {
 impl engine::TGraphicIndex for GraphicsEnum {}
 
 fn main() {
-    let mut engine = Engine::<GraphicsEnum>::new(1200f32, 400f32).unwrap();
-    
+    let mut engine = Engine::<GraphicsEnum>::new(1800f32, 600f32).unwrap();
+
     engine.graphics
         .load_graphic(GraphicsEnum::Bullet, "assets/bullet.png",
                       entities::bullet::WIDTH,
