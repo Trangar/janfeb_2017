@@ -7,8 +7,10 @@ before_script:
 script:
   - cargo test --verbose --release -- --nocapture
   - cargo build --release --verbose
+before_deploy:
   - cd target/release
-  - mv janfeb "${TRAVIS_OS_NAME}_janfeb"
+  - if [ "$TRAVIS_OS_NAME" = "osx"]; then mv janfeb osx_janfeb; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux"]; then mv janfeb linux_janfeb; fi
 deploy:
   provider: releases
   api_key: "$GITHUB_TOKEN"
