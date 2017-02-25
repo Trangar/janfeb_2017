@@ -3,14 +3,17 @@ os:
   - linux
   - osx
 before_script:
-  - if [ "$TRAVIS_OS_NAME" =   "osx" ]; then brew install freetype ; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install freetype ; fi
 script:
   - cargo test --verbose --release -- --nocapture
   - cargo build --release --verbose
+before_deploy:
+  - cd target/release
+  - ren janfeb "${TRAVIS_OS_NAME}_janfeb"
 deploy:
   provider: releases
   api_key: "$GITHUB_TOKEN"
-  file: "./target/release/janfeb"
+  file: "./target/release/${TRAVIS_OS_NAME}_janfeb"
   skip_cleanup: true
   on:
     tags: true
