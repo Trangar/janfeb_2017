@@ -9,7 +9,7 @@ script:
   - cargo build --release --verbose
 before_deploy:
   - cd target/release
-  - ren janfeb "${TRAVIS_OS_NAME}_janfeb"
+  - mv janfeb "${TRAVIS_OS_NAME}_janfeb"
 deploy:
   provider: releases
   api_key: "$GITHUB_TOKEN"
