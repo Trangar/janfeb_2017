@@ -2,8 +2,6 @@ language: rust
 os:
   - linux
   - osx
-env:
-  OUTPUT_FILE = ${TRAVIS_OS_NAME}_janfeb
 before_script:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install freetype ; fi
 script:
@@ -11,11 +9,11 @@ script:
   - cargo build --release --verbose
 before_deploy:
   - cd target/release
-  - mv janfeb $OUTPUT_FILE
+  - mv janfeb "${TRAVIS_OS_NAME}_janfeb"
 deploy:
   provider: releases
   api_key: "$GITHUB_TOKEN"
-  file: "./target/release/${OUTPUT_FILE}"
+  file: "./target/release/${TRAVIS_OS_NAME}_janfeb"
   skip_cleanup: true
   on:
     tags: true
