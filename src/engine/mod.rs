@@ -29,6 +29,7 @@ pub struct Engine<T: TGraphicIndex> {
     pub graphics: EngineGraphics<T>,
     pub keyboard: KeyboardState,
     pub running: bool,
+    pub render_hitboxes: bool,
 
     pub last_update_time: u64,
     pub entities: Vec<EntityWrapper<T>>,
@@ -36,11 +37,26 @@ pub struct Engine<T: TGraphicIndex> {
 }
 
 impl<T: TGraphicIndex> Engine<T> {
+    #[cfg(not(debug_assertions))]
     pub fn new(width: f32, height: f32) -> Result<Engine<T>> {
         let engine = Engine {
             graphics: EngineGraphics::<T>::new(width, height)?,
             keyboard: KeyboardState::default(),
             running: true,
+            render_hitboxes: false,
+            last_update_time: self::time::get(),
+            entities: Vec::new(),
+            rng: ::rand::thread_rng(),
+        };
+        Ok(engine)
+    }
+    #[cfg(debug_assertions)]
+    pub fn new(width: f32, height: f32) -> Result<Engine<T>> {
+        let engine = Engine {
+            graphics: EngineGraphics::<T>::new(width, height)?,
+            keyboard: KeyboardState::default(),
+            running: true,
+            render_hitboxes: true,
             last_update_time: self::time::get(),
             entities: Vec::new(),
             rng: ::rand::thread_rng(),
@@ -59,6 +75,18 @@ impl<T: TGraphicIndex> Engine<T> {
 
         if let Some(ref mut frame) = self.graphics.frame {
             frame.clear_color(0.0, 0.0, 1.0, 1.0);
+        }
+
+        if self.render_hitboxes {
+            for entity in &self.entities {
+                self.graphics.draw_rectangle(
+                    entity.state.x - entity.state.hitbox.left,
+                    entity.state.y - entity.state.hitbox.top,
+                    entity.state.hitbox.left + entity.state.hitbox.right,
+                    entity.state.hitbox.top + entity.state.hitbox.bottom,
+                    (0.0, 0.0, 0.0, 0.0f32)
+                )?;
+            }
         }
 
         for entity in &self.entities {

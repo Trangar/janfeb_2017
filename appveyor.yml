@@ -7,8 +7,13 @@ install:
 
 build_script:
   - cargo build --release
-  - ps: Push-AppveyorArtifact target/release/janfeb.exe
-  - ps: Push-AppveyorArtifact .cargo/freetype/x86_64/freetype.dll
+  - mkdir output
+  - copy target\release\janfeb.exe output
+  - robocopy assets output/assets /s /e
 
 test_script:
   - cargo test --verbose --release -- --nocapture
+
+artifacts:
+  - path: 
+    name: janfeb.zip

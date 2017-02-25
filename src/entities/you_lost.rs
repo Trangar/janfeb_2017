@@ -15,13 +15,20 @@ impl YouLost {
     }
 }
 
+const COLOR_WHITE: Color = (1.0, 1.0, 1.0, 1.0);
+
 impl EntityTrait<GraphicsEnum> for YouLost {
     fn identifying_string(&self) -> String { "You lost!".to_owned() }
 
     fn draw(&self, _: &EntityState, graphics: &mut EngineGraphics<GraphicsEnum>) -> Result<()> {
         let x = graphics.width / 2f32;
         let y = graphics.height / 2f32;
-        graphics.draw(GraphicsEnum::YouLost, x, y, 0.0f32, 1.0f32)
+        graphics.draw(GraphicsEnum::YouLost, x, y, 0.0f32, 1.0f32)?;
+
+        let x = graphics.width / 2f32 - 100f32;
+        let y = graphics.height / 2f32 + 50f32;
+
+        graphics.draw_text_at("Press space to restart".to_owned(), x, y, COLOR_WHITE)
     }
 
     fn update(&mut self,

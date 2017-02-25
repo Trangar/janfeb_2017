@@ -5,6 +5,7 @@ use glium::texture::TextureCreationError;
 use glium::glutin::CreationError;
 use std::convert::From;
 use image::ImageError;
+use std::io::Error as ioError;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
@@ -28,6 +29,7 @@ pub enum ErrorEnum {
     // NoInnerPixelSize,
     // ComponentNotFound(u64),
     ImageError(ImageError),
+    IOError(ioError),
 }
 
 // impl Error {
@@ -128,6 +130,15 @@ impl From<()> for Error {
         Error {
             description: format!("No context error"),
             error_type: ErrorEnum::NoContext,
+        }
+    }
+}
+
+impl From<ioError> for Error {
+    fn from(err: ioError) -> Self {
+        Error {
+            description: format!("IO error: {:?}", err),
+            error_type: ErrorEnum::IOError(err)
         }
     }
 }

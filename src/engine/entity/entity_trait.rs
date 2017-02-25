@@ -15,7 +15,7 @@ pub trait EntityTrait<T: TGraphicIndex> {
     fn draw(&self, _state: &EntityState, _graphics: &mut EngineGraphics<T>) -> Result<()> {
         Ok(())
     }
-    fn get_initial_state(&self, _engine: &Engine<T>) -> EntityState {
+    fn get_initial_state(&mut self, _engine: &Engine<T>) -> EntityState {
         EntityState::default()
     }
     fn update(&mut self,

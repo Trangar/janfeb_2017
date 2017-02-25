@@ -1,5 +1,6 @@
 use GraphicsEnum;
 use engine::*;
+use std::f32::consts::PI;
 
 pub const WIDTH: f32 = 16.0;
 pub const HEIGHT: f32 = 16.0;
@@ -34,7 +35,7 @@ impl EntityTrait<GraphicsEnum> for Bullet {
         if self.is_player_bullet { vec![CollisionLayer::Enemy] }
         else { vec![CollisionLayer::Player] }
     }
-    fn get_initial_state(&self, _: &Engine<GraphicsEnum>) -> EntityState {
+    fn get_initial_state(&mut self, _: &Engine<GraphicsEnum>) -> EntityState {
         let hitbox = Hitbox {
             left: 6f32,
             top: 6f32,
@@ -54,12 +55,12 @@ impl EntityTrait<GraphicsEnum> for Bullet {
               state: &mut EntityState)
               -> Vec<EntityEvent<GraphicsEnum>> {
         if self.is_player_bullet {
-            state.x += 0.5f32 * game_state.delta_time;
+            state.x += 1f32 * game_state.delta_time;
             if state.x - state.hitbox.left > game_state.screen_width {
                 state.active = false;
             }
         } else {
-            state.x -= 0.1f32 * game_state.delta_time;
+            state.x -= 0.5f32 * game_state.delta_time;
 
             if state.x + state.hitbox.right < 0f32 {
                 state.active = false;
@@ -74,6 +75,7 @@ impl EntityTrait<GraphicsEnum> for Bullet {
     }
 
     fn draw(&self, state: &EntityState, graphics: &mut EngineGraphics<GraphicsEnum>) -> Result<()> {
-        graphics.draw(GraphicsEnum::Bullet, state.x, state.y, 0f32, 1f32)
+        let angle = if self.is_player_bullet { 0f32 } else { PI };
+        graphics.draw(GraphicsEnum::Bullet, state.x, state.y, angle, 1f32)
     }
 }

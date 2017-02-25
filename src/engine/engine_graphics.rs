@@ -6,6 +6,8 @@ use glium::uniforms::UniformsStorage;
 use glium::glutin::WindowBuilder;
 use glium::index::PrimitiveType;
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::Read;
 
 
 #[derive(Copy, Clone)]
@@ -76,8 +78,14 @@ impl<T: TGraphicIndex> EngineGraphics<T> {
         })
     }
 
-    pub fn load_graphic(&mut self, key: T, bytes: &[u8], width: f32, height: f32) -> Result<()> {
-        let param = DrawHelper::new(self, width, height, bytes)?;
+    pub fn load_graphic(&mut self, key: T, file: &str, width: f32, height: f32) -> Result<()> {
+        let bytes = {
+            let mut file = File::open(file)?;
+            let mut vec = Vec::new();
+            file.read_to_end(&mut vec)?;
+            vec
+        };
+        let param = DrawHelper::new(self, width, height, &bytes)?;
         self.graphics.insert(key, param);
         Ok(())
     }

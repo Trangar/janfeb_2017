@@ -13,12 +13,15 @@ use engine::{Engine, EntityTrait};
 #[derive(PartialEq, Eq, Hash)]
 pub enum GraphicsEnum {
     Bullet,
-    Spaceship,
+    Player,
+    Enemy1,
+    Enemy2,
+    Enemy3,
     YouLost,
 }
 
 fn get_initial_state() -> Vec<Box<EntityTrait<GraphicsEnum>>> {
-    let spawner = entities::BulletSpawner::new();
+    let spawner = entities::EnemySpawner::new();
     let player = entities::Player::new();
     vec![
         Box::new(spawner),
@@ -30,21 +33,19 @@ impl engine::TGraphicIndex for GraphicsEnum {}
 
 fn main() {
     let mut engine = Engine::<GraphicsEnum>::new(1200f32, 400f32).unwrap();
+    
     engine.graphics
-        .load_graphic(GraphicsEnum::Bullet,
-                      include_bytes!("../assets/bullet.png"),
+        .load_graphic(GraphicsEnum::Bullet, "assets/bullet.png",
                       entities::bullet::WIDTH,
                       entities::bullet::HEIGHT)
         .unwrap();
     engine.graphics
-        .load_graphic(GraphicsEnum::Spaceship,
-                      include_bytes!("../assets/spaceship.png"),
+        .load_graphic(GraphicsEnum::Player, "assets/spaceships/medium/1.png",
                       entities::player::WIDTH,
                       entities::player::HEIGHT)
         .unwrap();
     engine.graphics
-        .load_graphic(GraphicsEnum::YouLost,
-                      include_bytes!("../assets/you_lost.png"),
+        .load_graphic(GraphicsEnum::YouLost, "assets/you_lost.png",
                       entities::you_lost::WIDTH,
                       entities::you_lost::HEIGHT)
         .unwrap();

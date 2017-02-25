@@ -10,6 +10,7 @@ pub struct EntityWrapper<T: TGraphicIndex> {
 
 impl<T: TGraphicIndex> EntityWrapper<T> {
     pub fn new(entity: Box<EntityTrait<T>>, engine: &Engine<T>) -> EntityWrapper<T> {
+        let mut entity = entity;
         EntityWrapper {
             state: entity.get_initial_state(engine),
             name: entity.identifying_string(),
