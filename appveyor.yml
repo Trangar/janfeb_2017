@@ -7,9 +7,9 @@ install:
 
 build_script:
   - cargo build --release
-  - mkdir output
-  - (robocopy assets output/assets /s /e) ^$ exit 0
-  - copy target\release\janfeb.exe output
+  - mkdir output/assets
+  - xcopy assets output\assets /y /E
+  - xcopy target\release\janfeb.exe output /y
   - dir output
 
 test_script:
