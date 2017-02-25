@@ -7,3 +7,10 @@ before_script:
 script:
   - cargo test --verbose --release -- --nocapture
   - cargo build --release --verbose
+deploy:
+  provider: releases
+  api_key: "$GITHUB_API_KEY"
+  file: "target/release/janfeb_2017"
+  skip_cleanup: true
+  on:
+    tags: true
