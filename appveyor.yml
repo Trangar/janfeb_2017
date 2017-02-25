@@ -16,6 +16,5 @@ test_script:
   - cargo test --verbose --release -- --nocapture
 
 artifacts:
-  - path: output\**\*.*
+  - path: output
     name: janfeb
-    type: zip
