@@ -7,7 +7,6 @@ before_script:
 script:
   - cargo test --verbose --release -- --nocapture
   - cargo build --release --verbose
-before_deploy:
   - cd target/release
   - mv janfeb "${TRAVIS_OS_NAME}_janfeb"
 deploy:
