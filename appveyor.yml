@@ -9,7 +9,7 @@ build_script:
   - cargo build --release
   - mkdir output
   - robocopy assets output/assets /s /e
-  - copy target\release\janfeb.exe output
+    copy target\release\janfeb.exe output
 
 test_script:
   - cargo test --verbose --release -- --nocapture
