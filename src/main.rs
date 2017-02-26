@@ -35,7 +35,7 @@ fn main() {
                       entities::bullet::HEIGHT)
         .unwrap();
     engine.graphics
-        .load_graphic(GraphicsEnum::Player, "assets/spaceships/medium/1.png",
+        .load_graphic(GraphicsEnum::Player, "assets/spaceships/large/9.png",
                       entities::player::WIDTH,
                       entities::player::HEIGHT)
         .unwrap();

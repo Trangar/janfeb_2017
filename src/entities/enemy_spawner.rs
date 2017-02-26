@@ -57,7 +57,7 @@ impl EntityTrait<GraphicsEnum> for EnemySpawner {
                     },
                     _ => unreachable!()
                 };
-                x += 50f32;
+                x += 100f32;
             }
             self.enemy_amount_to_spawn += 1;
             self.generate_time_target();
