@@ -1,4 +1,4 @@
-use engine::{Engine, EngineGraphics, GameState, TGraphicIndex, Result};
+use {Engine, EngineGraphics, GameState, TGraphicIndex, Result};
 use super::{CollisionLayer, EntityEvent, EntityState};
 
 pub trait EntityTrait<T: TGraphicIndex> {

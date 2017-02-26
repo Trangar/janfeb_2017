@@ -18,7 +18,7 @@ impl TextGraphics {
     pub fn new(display: &GlutinFacade) -> Result<TextGraphics> {
         let system = TextSystem::new(display);
         let font =
-            Rc::new(FontTexture::new(display, &include_bytes!("../../assets/arial.ttf")[..], 16)?);
+            Rc::new(FontTexture::new(display, &include_bytes!("../assets/arial.ttf")[..], 16)?);
         Ok(TextGraphics {
             system: system,
             font: font,

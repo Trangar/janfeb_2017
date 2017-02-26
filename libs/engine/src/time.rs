@@ -1,9 +1,8 @@
-use time;
 
 const NS_TO_MS: u64 = 1_000_000;
 
 pub fn get() -> u64 {
-    time::precise_time_ns() / NS_TO_MS
+    ::__time::precise_time_ns() / NS_TO_MS
 }
 
 pub fn has_elapsed(time: &mut u64, interval_in_ms: u64) -> bool {

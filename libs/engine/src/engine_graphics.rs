@@ -41,12 +41,12 @@ impl<T: TGraphicIndex> EngineGraphics<T> {
             .build_glium()?;
         let textured_program =
             Program::from_source(&display,
-                                 include_str!("../../assets/textured_shader.vert"),
-                                 include_str!("../../assets/textured_shader.frag"),
+                                 include_str!("../assets/textured_shader.vert"),
+                                 include_str!("../assets/textured_shader.frag"),
                                  None)?;
         let color_program = Program::from_source(&display,
-                                                 include_str!("../../assets/color_shader.vert"),
-                                                 include_str!("../../assets/color_shader.frag"),
+                                                 include_str!("../assets/color_shader.vert"),
+                                                 include_str!("../assets/color_shader.frag"),
                                                  None)?;
 
         println!("{:?}", display.get_opengl_version());

@@ -1,4 +1,4 @@
-use engine::{Engine, TGraphicIndex};
+use {Engine, TGraphicIndex};
 use super::{EntityState, EntityTrait};
 
 // TODO: Cache default drawing helper and draw that automatically when it has one

@@ -1,8 +1,12 @@
 [package]
-name = "janfeb"
+name = "engine"
 version = "0.1.0"
 authors = ["Victor Koenders <victor.koenders@gmail.com>"]
 
 [dependencies]
+glium_text = "*"
+glium = "*"
+image = "*"
+time = "*"
 rand = "*"
-engine = { path = "libs/engine" }
+
