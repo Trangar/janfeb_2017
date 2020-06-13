@@ -1,9 +1,9 @@
-mod state;
 mod entity_trait;
+mod state;
 mod wrapper;
 
-pub use self::state::EntityState;
 pub use self::entity_trait::EntityTrait;
+pub use self::state::EntityState;
 pub use self::wrapper::EntityWrapper;
 
 use super::TGraphicIndex;
@@ -18,7 +18,7 @@ pub enum CollisionLayer {
 pub enum EntityEvent<T: TGraphicIndex> {
     #[allow(dead_code)]
     ClearAllEntities,
-    SpawnEntity(Box<EntityTrait<T>>),
+    SpawnEntity(Box<dyn EntityTrait<T>>),
 }
 
 #[derive(Default)]

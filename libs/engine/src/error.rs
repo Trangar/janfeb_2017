@@ -1,10 +1,9 @@
-use glium::{DrawError, GliumCreationError, ProgramCreationError, SwapBuffersError};
-use glium::vertex::BufferCreationError as VertexCreationError;
 use glium::index::BufferCreationError as IndexCreationError;
 use glium::texture::TextureCreationError;
-use glium::glutin::CreationError;
-use std::convert::From;
+use glium::vertex::BufferCreationError as VertexCreationError;
+use glium::{DrawError, ProgramCreationError, SwapBuffersError};
 use image::ImageError;
+use std::convert::From;
 use std::io::Error as ioError;
 
 pub type Result<T> = ::std::result::Result<T, Error>;
@@ -18,7 +17,6 @@ pub struct Error {
 #[derive(Debug)]
 pub enum ErrorEnum {
     NoContext,
-    GliumCreationError(GliumCreationError<CreationError>),
     ProgramCreationError(ProgramCreationError),
     TextureCreationError(TextureCreationError),
     IndexCreationError(IndexCreationError),
@@ -52,15 +50,6 @@ pub enum ErrorEnum {
 //    }
 //
 //
-
-impl From<GliumCreationError<CreationError>> for Error {
-    fn from(error: GliumCreationError<CreationError>) -> Self {
-        Error {
-            description: format!("Glium creation error: {:?}", error),
-            error_type: ErrorEnum::GliumCreationError(error),
-        }
-    }
-}
 
 impl From<ProgramCreationError> for Error {
     fn from(error: ProgramCreationError) -> Self {
@@ -128,7 +117,7 @@ impl From<ImageError> for Error {
 impl From<()> for Error {
     fn from(_: ()) -> Self {
         Error {
-            description: format!("No context error"),
+            description: "No context error".to_string(),
             error_type: ErrorEnum::NoContext,
         }
     }
@@ -138,7 +127,7 @@ impl From<ioError> for Error {
     fn from(err: ioError) -> Self {
         Error {
             description: format!("IO error: {:?}", err),
-            error_type: ErrorEnum::IOError(err)
+            error_type: ErrorEnum::IOError(err),
         }
     }
 }

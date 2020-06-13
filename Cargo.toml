@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["Victor Koenders <victor.koenders@gmail.com>"]
 
 [dependencies]
-rand = "*"
+rand = "0.7"
 engine = { path = "libs/engine" }

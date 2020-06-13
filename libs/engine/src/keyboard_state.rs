@@ -26,14 +26,14 @@ impl KeyboardState {
     }
 
     pub fn is_keydown(&self, key: VirtualKeyCode) -> bool {
-        self.pressed_keys.iter().position(|k| *k == key).is_some()
+        self.pressed_keys.iter().any(|k| *k == key)
     }
 
     pub fn is_pressed_this_frame(&self, key: VirtualKeyCode) -> bool {
-        self.pressed_keys_this_frame.iter().position(|k| *k == key).is_some()
+        self.pressed_keys_this_frame.iter().any(|k| *k == key)
     }
 
     pub fn is_released_this_frame(&self, key: VirtualKeyCode) -> bool {
-        self.released_keys_this_frame.iter().position(|k| *k == key).is_some()
+        self.released_keys_this_frame.iter().any(|k| *k == key)
     }
 }

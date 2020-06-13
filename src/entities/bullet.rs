@@ -1,6 +1,6 @@
-use GraphicsEnum;
 use engine::*;
 use std::f32::consts::PI;
+use GraphicsEnum;
 
 pub const WIDTH: f32 = 16.0;
 pub const HEIGHT: f32 = 16.0;
@@ -16,24 +16,28 @@ impl Bullet {
         Bullet {
             start_x: x,
             start_y: y,
-            is_player_bullet: is_player_bullet,
+            is_player_bullet,
         }
     }
 }
 
 impl EntityTrait<GraphicsEnum> for Bullet {
     fn identifying_string(&self) -> String {
-        format!("Bullet")
+        "Bullet".to_string()
     }
     fn collision_layers(&self) -> Option<CollisionLayer> {
-        Some(
-            if self.is_player_bullet { CollisionLayer::Player }
-            else { CollisionLayer::Enemy }
-        )
+        Some(if self.is_player_bullet {
+            CollisionLayer::Player
+        } else {
+            CollisionLayer::Enemy
+        })
     }
     fn collides_with_layers(&self) -> Vec<CollisionLayer> {
-        if self.is_player_bullet { vec![CollisionLayer::Enemy] }
-        else { vec![CollisionLayer::Player] }
+        if self.is_player_bullet {
+            vec![CollisionLayer::Enemy]
+        } else {
+            vec![CollisionLayer::Player]
+        }
     }
     fn get_initial_state(&mut self, _: &Engine<GraphicsEnum>) -> EntityState {
         let hitbox = Hitbox {
@@ -45,15 +49,16 @@ impl EntityTrait<GraphicsEnum> for Bullet {
         EntityState {
             x: self.start_x,
             y: self.start_y,
-            hitbox: hitbox,
+            hitbox,
             ..EntityState::default()
         }
     }
 
-    fn update(&mut self,
-              game_state: &mut GameState,
-              state: &mut EntityState)
-              -> Vec<EntityEvent<GraphicsEnum>> {
+    fn update(
+        &mut self,
+        game_state: &mut GameState,
+        state: &mut EntityState,
+    ) -> Vec<EntityEvent<GraphicsEnum>> {
         if self.is_player_bullet {
             state.x += 1f32 * game_state.delta_time;
             if state.x - state.hitbox.left > game_state.screen_width {
@@ -69,7 +74,12 @@ impl EntityTrait<GraphicsEnum> for Bullet {
         Vec::new()
     }
 
-    fn collided(&mut self, state: &mut EntityState, _: &Box<EntityTrait<GraphicsEnum>>, _: &mut EntityState) -> Vec<EntityEvent<GraphicsEnum>> {
+    fn collided(
+        &mut self,
+        state: &mut EntityState,
+        _: &Box<dyn EntityTrait<GraphicsEnum>>,
+        _: &mut EntityState,
+    ) -> Vec<EntityEvent<GraphicsEnum>> {
         state.active = false;
         Vec::new()
     }

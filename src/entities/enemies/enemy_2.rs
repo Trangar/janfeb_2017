@@ -1,7 +1,7 @@
-use std::f32::consts::PI;
-use entities::Bullet;
-use GraphicsEnum;
 use engine::*;
+use entities::Bullet;
+use std::f32::consts::PI;
+use GraphicsEnum;
 
 pub struct Enemy2 {
     start_x: f32,
@@ -29,7 +29,7 @@ impl Enemy2 {
             loop_center_x: 0f32,
             loop_center_y: 0f32,
             loop_direction: 0f32,
-            bullet_target_time: bullet_target_time,
+            bullet_target_time,
             bullet_recharge_counter: bullet_target_time / 2f32,
         }
     }
@@ -52,23 +52,28 @@ impl EntityTrait<GraphicsEnum> for Enemy2 {
             right: 25f32,
             bottom: 40f32,
         };
-        self.loop_direction = if self.start_y < engine.graphics.height / 2f32 { -1f32 } else { 1f32 };
+        self.loop_direction = if self.start_y < engine.graphics.height / 2f32 {
+            -1f32
+        } else {
+            1f32
+        };
         EntityState {
             x: self.start_x,
             y: self.start_y,
-            hitbox: hitbox,
+            hitbox,
             ..EntityState::default()
         }
     }
-    fn update(&mut self,
-              game_state: &mut GameState,
-              state: &mut EntityState)
-              -> Vec<EntityEvent<GraphicsEnum>> {
-
+    fn update(
+        &mut self,
+        game_state: &mut GameState,
+        state: &mut EntityState,
+    ) -> Vec<EntityEvent<GraphicsEnum>> {
         const LOOP_RADIUS: f32 = 100f32;
 
         let loop_is_done = self.loop_angle >= PI * 2f32 || self.loop_angle <= PI * -2f32;
-        let is_in_loop = (state.x < game_state.screen_width * TWOTHIRD || self.loop_angle != 0f32) && !loop_is_done;
+        let is_in_loop = (state.x < game_state.screen_width * TWOTHIRD || self.loop_angle != 0f32)
+            && !loop_is_done;
 
         if is_in_loop {
             if self.loop_angle == 0f32 {
@@ -77,7 +82,8 @@ impl EntityTrait<GraphicsEnum> for Enemy2 {
             }
             self.loop_angle += game_state.delta_time / 250f32;
             state.x = self.loop_center_x - self.loop_angle.sin() * LOOP_RADIUS;
-            state.y = self.loop_center_y + self.loop_direction * self.loop_angle.cos() * LOOP_RADIUS;
+            state.y =
+                self.loop_center_y + self.loop_direction * self.loop_angle.cos() * LOOP_RADIUS;
         } else {
             state.x -= 0.3f32 * game_state.delta_time;
         }
@@ -93,19 +99,26 @@ impl EntityTrait<GraphicsEnum> for Enemy2 {
         result
     }
     fn draw(&self, state: &EntityState, graphics: &mut EngineGraphics<GraphicsEnum>) -> Result<()> {
-        graphics.draw(GraphicsEnum::Player, state.x, state.y, PI / 2f32 * 3f32, 1f32)
+        graphics.draw(
+            GraphicsEnum::Player,
+            state.x,
+            state.y,
+            PI / 2f32 * 3f32,
+            1f32,
+        )
     }
-    fn collided(&mut self,
-                self_state: &mut EntityState,
-                _: &Box<EntityTrait<GraphicsEnum>>,
-                _: &mut EntityState)
-                -> Vec<EntityEvent<GraphicsEnum>> {
+    fn collided(
+        &mut self,
+        self_state: &mut EntityState,
+        _: &Box<dyn EntityTrait<GraphicsEnum>>,
+        _: &mut EntityState,
+    ) -> Vec<EntityEvent<GraphicsEnum>> {
         if self.health <= 1f32 {
             self_state.active = false;
         } else {
             self.health -= 1f32;
         }
-        
+
         Vec::new()
     }
 }
