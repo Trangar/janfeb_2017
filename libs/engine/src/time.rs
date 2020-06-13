@@ -1,8 +1,7 @@
-
-const NS_TO_MS: u64 = 1_000_000;
+use __time::OffsetDateTime;
 
 pub fn get() -> u64 {
-    ::__time::precise_time_ns() / NS_TO_MS
+    (OffsetDateTime::now_utc() - OffsetDateTime::unix_epoch()).whole_milliseconds() as u64
 }
 
 pub fn has_elapsed(time: &mut u64, interval_in_ms: u64) -> bool {

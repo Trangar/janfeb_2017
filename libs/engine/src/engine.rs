@@ -1,5 +1,6 @@
-use glium::Surface;
 use super::*;
+use glium::Surface;
+use winit::{KeyboardInput, WindowEvent};
 
 pub struct Engine<T: TGraphicIndex> {
     pub graphics: EngineGraphics<T>,
@@ -9,7 +10,7 @@ pub struct Engine<T: TGraphicIndex> {
 
     pub last_update_time: u64,
     pub entities: Vec<EntityWrapper<T>>,
-    pub rng: ::rand::ThreadRng,
+    pub rng: rand::prelude::ThreadRng,
 }
 
 impl<T: TGraphicIndex> Engine<T> {
@@ -41,7 +42,7 @@ impl<T: TGraphicIndex> Engine<T> {
     }
 
     #[cfg(debug_assertions)]
-    pub fn register_entity(&mut self, entity: Box<EntityTrait<T>>) {
+    pub fn register_entity(&mut self, entity: Box<dyn EntityTrait<T>>) {
         if self.entities.len() < 200 {
             let wrapper = EntityWrapper::new(entity, self);
             self.entities.push(wrapper);
@@ -60,7 +61,7 @@ impl<T: TGraphicIndex> Engine<T> {
         self.keyboard.frame_start();
         self.graphics.frame = Some(self.graphics.display.draw());
 
-        if let Some(ref mut frame) = self.graphics.frame {
+        if let Some(frame) = &mut self.graphics.frame {
             frame.clear_color(0.0, 0.0, 1.0, 1.0);
         }
 
@@ -71,7 +72,7 @@ impl<T: TGraphicIndex> Engine<T> {
                     entity.state.y - entity.state.hitbox.top,
                     entity.state.hitbox.left + entity.state.hitbox.right,
                     entity.state.hitbox.top + entity.state.hitbox.bottom,
-                    (0.0, 0.0, 0.0, 0.0f32)
+                    (0.0, 0.0, 0.0, 0.0f32),
                 )?;
             }
         }
@@ -100,25 +101,32 @@ impl<T: TGraphicIndex> Engine<T> {
         }
     }
 
-    fn check_collision_between(first: &mut EntityWrapper<T>, second: &mut EntityWrapper<T>) -> Vec<EntityEvent<T>> {
+    fn check_collision_between(
+        first: &mut EntityWrapper<T>,
+        second: &mut EntityWrapper<T>,
+    ) -> Vec<EntityEvent<T>> {
         if let Some(layer) = first.entity.collision_layers() {
-            if second.entity.collides_with_layers().contains(&layer) {
-                if first.entity.intersects_with(&first.state, &second.entity, &second.state) {
-                    return first.entity.collided(&mut first.state, &second.entity, &mut second.state);
-                }
+            if second.entity.collides_with_layers().contains(&layer)
+                && first
+                    .entity
+                    .intersects_with(&first.state, &second.entity, &second.state)
+            {
+                return first
+                    .entity
+                    .collided(&mut first.state, &second.entity, &mut second.state);
             }
         }
-        return Vec::new();
+        Vec::new()
     }
 
     fn check_collisions(&mut self) {
         let events = {
             let mut events = Vec::new();
-            let ref mut slice = self.entities[..];
+            let slice = &mut self.entities[..];
             for i in 1..slice.len() {
-                let (ref mut first, ref mut remaining) = slice.split_at_mut(i);
-                let ref mut first = first.last_mut().unwrap();
-                for ref mut second in remaining.iter_mut() {
+                let (first, remaining) = slice.split_at_mut(i);
+                let first = first.last_mut().unwrap();
+                for second in remaining.iter_mut() {
                     events.extend(Engine::check_collision_between(first, second).into_iter());
                     events.extend(Engine::check_collision_between(second, first).into_iter());
                 }
@@ -136,7 +144,7 @@ impl<T: TGraphicIndex> Engine<T> {
 
         for entity in &mut self.entities {
             let mut state = GameState {
-                delta_time: delta_time,
+                delta_time,
                 keyboard: &self.keyboard,
                 screen_width: self.graphics.width,
                 screen_height: self.graphics.height,
@@ -164,34 +172,60 @@ impl<T: TGraphicIndex> Engine<T> {
             frame_count += 1;
             if self::time::has_elapsed(&mut last_frame_time, 500) {
                 // println!("FPS: {} - entities: {}", frame_count * 2, self.entities.len());
-                self.graphics
-                    .display
-                    .get_window()
-                    .unwrap()
-                    .set_title(&format!("FPS: {} - entities: {}",
-                                        frame_count * 2,
-                                        self.entities.len()));
+                self.graphics.display.gl_window().set_title(&format!(
+                    "FPS: {} - entities: {}",
+                    frame_count * 2,
+                    self.entities.len()
+                ));
                 frame_count = 0;
             }
         }
     }
 
     pub fn update_events(&mut self) {
-        for event in self.graphics.display.poll_events() {
-            match event {
-                Event::Closed |
-                Event::KeyboardInput(ElementState::Pressed, _, Some(VirtualKeyCode::Escape)) => {
-                    self.running = false;
-                    break;
+        let Engine {
+            graphics,
+            running,
+            keyboard,
+            ..
+        } = self;
+
+        graphics.events_loop.poll_events(|event| {
+            if let Event::WindowEvent { event, .. } = event {
+                match event {
+                    WindowEvent::CloseRequested
+                    | WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(VirtualKeyCode::Escape),
+                                ..
+                            },
+                        ..
+                    } => {
+                        *running = false;
+                    }
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Pressed,
+                                virtual_keycode: Some(code),
+                                ..
+                            },
+                        ..
+                    } => keyboard.set_keydown(code),
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state: ElementState::Released,
+                                virtual_keycode: Some(code),
+                                ..
+                            },
+                        ..
+                    } => keyboard.clear_keydown(code),
+                    _ => (),
                 }
-                Event::KeyboardInput(ElementState::Pressed, _, Some(code)) => {
-                    self.keyboard.set_keydown(code);
-                }
-                Event::KeyboardInput(ElementState::Released, _, Some(code)) => {
-                    self.keyboard.clear_keydown(code);
-                }
-                _ => (),
             }
-        }
+        });
     }
 }

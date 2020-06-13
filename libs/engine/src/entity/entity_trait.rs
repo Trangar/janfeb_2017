@@ -1,5 +1,5 @@
-use {Engine, EngineGraphics, GameState, TGraphicIndex, Result};
 use super::{CollisionLayer, EntityEvent, EntityState};
+use {Engine, EngineGraphics, GameState, Result, TGraphicIndex};
 
 pub trait EntityTrait<T: TGraphicIndex> {
     fn identifying_string(&self) -> String;
@@ -18,25 +18,28 @@ pub trait EntityTrait<T: TGraphicIndex> {
     fn get_initial_state(&mut self, _engine: &Engine<T>) -> EntityState {
         EntityState::default()
     }
-    fn update(&mut self,
-              _game_state: &mut GameState,
-              _entity_state: &mut EntityState)
-              -> Vec<EntityEvent<T>> {
+    fn update(
+        &mut self,
+        _game_state: &mut GameState,
+        _entity_state: &mut EntityState,
+    ) -> Vec<EntityEvent<T>> {
         Vec::new()
     }
-    fn collided(&mut self,
-                _self_state: &mut EntityState,
-                _other: &Box<EntityTrait<T>>,
-                _other_state: &mut EntityState)
-                -> Vec<EntityEvent<T>> {
+    fn collided(
+        &mut self,
+        _self_state: &mut EntityState,
+        _other: &Box<dyn EntityTrait<T>>,
+        _other_state: &mut EntityState,
+    ) -> Vec<EntityEvent<T>> {
         Vec::new()
     }
 
-    fn intersects_with(&self,
-                       self_state: &EntityState,
-                       _other: &Box<EntityTrait<T>>,
-                       other_state: &EntityState)
-                       -> bool {
+    fn intersects_with(
+        &self,
+        self_state: &EntityState,
+        _other: &Box<dyn EntityTrait<T>>,
+        other_state: &EntityState,
+    ) -> bool {
         // check if our left hitbox is larger than the other's right hitbox
         if self_state.x - self_state.hitbox.left > other_state.x + other_state.hitbox.right {
             return false;

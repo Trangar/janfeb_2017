@@ -1,9 +1,9 @@
-use GraphicsEnum;
+use super::{Bullet, YouLost};
 use engine::*;
-use super::{Bullet,YouLost};
 use std::f32::consts::PI;
+use GraphicsEnum;
 
-const PLAYER_FIRE_POINTS: [[f32;2];2] = [[25.0, -25.0], [25.0, 25.0]];
+const PLAYER_FIRE_POINTS: [[f32; 2]; 2] = [[25.0, -25.0], [25.0, 25.0]];
 const PLAYER_FIRE_INTERVAL: f32 = 100f32;
 
 pub const WIDTH: f32 = 1306f32 / 20f32;
@@ -53,15 +53,16 @@ impl EntityTrait<GraphicsEnum> for Player {
         EntityState {
             x: hitbox.left,
             y: engine.graphics.height / 2f32,
-            hitbox: hitbox,
+            hitbox,
             ..EntityState::default()
         }
     }
 
-    fn update(&mut self,
-              game_state: &mut GameState,
-              state: &mut EntityState)
-              -> Vec<EntityEvent<GraphicsEnum>> {
+    fn update(
+        &mut self,
+        game_state: &mut GameState,
+        state: &mut EntityState,
+    ) -> Vec<EntityEvent<GraphicsEnum>> {
         let mut x = 0f32;
         let mut y = 0f32;
 
@@ -81,12 +82,16 @@ impl EntityTrait<GraphicsEnum> for Player {
         state.x += x * HORIZONTAL_SPEED * game_state.delta_time;
         state.y += y * VERTICAL_SPEED * game_state.delta_time;
 
-        clamp_to(&mut state.x,
-                 state.hitbox.left,
-                 game_state.screen_width - state.hitbox.right);
-        clamp_to(&mut state.y,
-                 state.hitbox.top,
-                 game_state.screen_height - state.hitbox.bottom);
+        clamp_to(
+            &mut state.x,
+            state.hitbox.left,
+            game_state.screen_width - state.hitbox.right,
+        );
+        clamp_to(
+            &mut state.y,
+            state.hitbox.top,
+            game_state.screen_height - state.hitbox.bottom,
+        );
 
         let mut result = Vec::new();
         if self.last_bullet_time < game_state.delta_time {
@@ -109,39 +114,46 @@ impl EntityTrait<GraphicsEnum> for Player {
         let health_factor = (self.health as f32) / (self.max_health as f32);
         let healthbar_offset: (f32, f32) = (-state.hitbox.left * 0.75, -(state.hitbox.top + 25f32));
         let healthbar_size: (f32, f32) = ((state.hitbox.left + state.hitbox.right) * 0.5, 5f32);
-        graphics.draw_rectangle(state.x + healthbar_offset.0,
-                            state.y + healthbar_offset.1,
-                            healthbar_size.0 * health_factor,
-                            healthbar_size.1,
-                            COLOR_GREEN)?;
-                            
-        graphics.draw_rectangle(state.x + healthbar_offset.0 + healthbar_size.0 * health_factor,
-                            state.y + healthbar_offset.1,
-                            healthbar_size.0 - healthbar_size.0 * health_factor,
-                            healthbar_size.1,
-                            COLOR_RED)?;
+        graphics.draw_rectangle(
+            state.x + healthbar_offset.0,
+            state.y + healthbar_offset.1,
+            healthbar_size.0 * health_factor,
+            healthbar_size.1,
+            COLOR_GREEN,
+        )?;
 
-        graphics.draw_text_at("Hero".to_owned(),
-                          state.x + healthbar_offset.0,
-                          state.y + healthbar_offset.1 - 15f32,
-                          COLOR_WHITE)?;
+        graphics.draw_rectangle(
+            state.x + healthbar_offset.0 + healthbar_size.0 * health_factor,
+            state.y + healthbar_offset.1,
+            healthbar_size.0 - healthbar_size.0 * health_factor,
+            healthbar_size.1,
+            COLOR_RED,
+        )?;
+
+        graphics.draw_text_at(
+            "Hero".to_owned(),
+            state.x + healthbar_offset.0,
+            state.y + healthbar_offset.1 - 15f32,
+            COLOR_WHITE,
+        )?;
         Ok(())
     }
 
-    fn collided(&mut self,
-                self_state: &mut EntityState,
-                _other: &Box<EntityTrait<GraphicsEnum>>,
-                other_state: &mut EntityState)
-                -> Vec<EntityEvent<GraphicsEnum>> {
-        if self.health > 0 { self.health -= 1; }
+    fn collided(
+        &mut self,
+        self_state: &mut EntityState,
+        _other: &Box<dyn EntityTrait<GraphicsEnum>>,
+        other_state: &mut EntityState,
+    ) -> Vec<EntityEvent<GraphicsEnum>> {
+        if self.health > 0 {
+            self.health -= 1;
+        }
         other_state.active = false;
 
         if self.health == 0 {
             self_state.active = false;
             let you_lost = Box::new(YouLost::new().unwrap());
-            vec![
-                EntityEvent::SpawnEntity(you_lost)
-            ]
+            vec![EntityEvent::SpawnEntity(you_lost)]
         } else {
             Vec::new()
         }

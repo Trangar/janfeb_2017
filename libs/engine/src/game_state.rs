@@ -1,5 +1,5 @@
 use super::KeyboardState;
-use rand::{ThreadRng, Rng};
+use rand::{prelude::ThreadRng, Rng};
 
 pub struct GameState<'a> {
     pub delta_time: f32,
@@ -12,6 +12,6 @@ pub struct GameState<'a> {
 impl<'a> GameState<'a> {
     #[allow(dead_code)]
     pub fn rand_f32(&mut self) -> f32 {
-        self.rng.next_f32()
+        self.rng.gen()
     }
 }
